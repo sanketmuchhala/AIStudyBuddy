@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ BRANCH_NAME ]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -25,24 +25,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # Compute the correct base path:
-      # - user/org site repo ends with ".github.io" => "/"
-      # - otherwise => "/<repo-name>/"
-      - name: Compute BASE_PATH
-        run: |
-          if [[ "${{ endsWith(github.event.repository.name, '.github.io') }}" == 'true' ]]; then
-            echo "BASE_PATH=/" >> $GITHUB_ENV
-          else
-            echo "BASE_PATH=/${{ github.event.repository.name }}/" >> $GITHUB_ENV
-          fi
-          echo "Using BASE_PATH=$BASE_PATH"
-
       - run: npm ci
-      # Pass the base to Vite so assets & SW are scoped correctly
-      - name: Build
-        run: npm run build -- --base "$BASE_PATH"
 
-      # SPA routing fix for client-side routes on Pages
+      # Build with the correct base for your repo name
+      - name: Build
+        run: npm run build -- --base "/AIStudyBuddy/"
+
+      # SPA routing fallback for client-side routes
       - name: Add SPA fallback
         run: |
           if [ -f dist/index.html ]; then cp -v dist/index.html dist/404.html; fi
