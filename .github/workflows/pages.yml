@@ -1,0 +1,63 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ BRANCH_NAME ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Compute the correct base path:
+      # - user/org site repo ends with ".github.io" => "/"
+      # - otherwise => "/<repo-name>/"
+      - name: Compute BASE_PATH
+        run: |
+          if [[ "${{ endsWith(github.event.repository.name, '.github.io') }}" == 'true' ]]; then
+            echo "BASE_PATH=/" >> $GITHUB_ENV
+          else
+            echo "BASE_PATH=/${{ github.event.repository.name }}/" >> $GITHUB_ENV
+          fi
+          echo "Using BASE_PATH=$BASE_PATH"
+
+      - run: npm ci
+      # Pass the base to Vite so assets & SW are scoped correctly
+      - name: Build
+        run: npm run build -- --base "$BASE_PATH"
+
+      # SPA routing fix for client-side routes on Pages
+      - name: Add SPA fallback
+        run: |
+          if [ -f dist/index.html ]; then cp -v dist/index.html dist/404.html; fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
