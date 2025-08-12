@@ -28,6 +28,7 @@ export interface Topic {
   reviewInterval: number; // days until next review
   reviewCount: number;
   easeFactor: number; // SM-2 algorithm ease factor
+  retentionRate?: number; // 0-1, retention rate for this topic
 }
 
 export interface StudySession {

@@ -383,7 +383,7 @@ export class AdaptiveLearningAnalyzer {
     
     return {
       overallProductivity: Math.min(1, totalHours / (sessions.length * 0.75)), // Normalize
-      subjectMastery: new Map(), // Would be calculated from actual data
+      subjectMastery: {}, // Would be calculated from actual data
       studyVelocity: totalHours / 7, // Hours per day
       retentionRate: 0.8, // Would be calculated from review performance
       goalAchievementRate: 0.7, // Would be calculated from completed goals
