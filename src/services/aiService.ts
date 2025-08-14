@@ -33,6 +33,23 @@ class AIService {
     this.authToken = token;
   }
 
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
+    return headers;
+  }
+
+  private getCurrentUserId(): string {
+    // In a real app, this would come from authentication
+    return 'demo-user-' + Math.random().toString(36).substr(2, 9);
+  }
+
   async healthCheck(): Promise<boolean> {
     try {
       const response = await fetch(`${this.apiBase}/health`, {
@@ -163,17 +180,39 @@ class AIService {
 
   // Study-specific AI methods
   async getStudyRecommendations(subject: string, currentProgress: number): Promise<string> {
-    const prompt = `I'm studying ${subject} and I'm currently at ${currentProgress}% completion. 
-    Please provide personalized study recommendations, including:
-    1. What topics I should focus on next
-    2. Study techniques that work well for this subject
-    3. Practice exercises or resources I should use
-    4. How to overcome common challenges in this subject
-    
-    Keep the response concise and actionable.`;
-    
-    const response = await this.sendMessage({ prompt });
-    return response.text;
+    try {
+      const response = await fetch(`${this.apiBase}/study/recommendations`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({
+          subject,
+          progress: currentProgress,
+          prompt: '', // Required by validateRequest middleware
+          userId: this.getCurrentUserId()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.recommendations;
+    } catch (error) {
+      console.error('Study recommendations failed:', error);
+      // Fallback to basic chat
+      const prompt = `I'm studying ${subject} and I'm currently at ${currentProgress}% completion. 
+      Please provide personalized study recommendations, including:
+      1. What topics I should focus on next
+      2. Study techniques that work well for this subject
+      3. Practice exercises or resources I should use
+      4. How to overcome common challenges in this subject
+      
+      Keep the response concise and actionable.`;
+      
+      const response = await this.sendMessage({ prompt });
+      return response.text;
+    }
   }
 
   async explainConcept(concept: string, subject: string): Promise<string> {
@@ -237,6 +276,96 @@ class AIService {
     
     const response = await this.sendMessage({ prompt });
     return response.text;
+  }
+
+  // Interview-specific methods
+  async uploadResume(formData: FormData): Promise<any> {
+    try {
+      const response = await fetch(`${this.apiBase}/interview/upload-resume`, {
+        method: 'POST',
+        body: formData // Don't set Content-Type for FormData
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Resume upload failed:', error);
+      throw error;
+    }
+  }
+
+  async submitInterviewAnswer(data: {
+    sessionId: string;
+    answer: string;
+    questionNumber: number;
+    userId: string;
+  }): Promise<any> {
+    try {
+      const response = await fetch(`${this.apiBase}/interview/answer`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Answer submission failed' }));
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Answer submission failed:', error);
+      throw error;
+    }
+  }
+
+  async getInterviewHistory(userId: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.apiBase}/interview/history/${userId}`, {
+        method: 'GET',
+        headers: this.getHeaders()
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to get history' }));
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Get interview history failed:', error);
+      throw error;
+    }
+  }
+
+  async recordStudySession(data: {
+    userId: string;
+    subject: string;
+    duration: number;
+    topics?: string[];
+    performanceScore?: number;
+  }): Promise<any> {
+    try {
+      const response = await fetch(`${this.apiBase}/study/session`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Failed to record session' }));
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Record study session failed:', error);
+      throw error;
+    }
   }
 }
 
