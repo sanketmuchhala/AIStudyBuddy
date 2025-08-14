@@ -7,26 +7,32 @@ export interface EnvironmentConfig {
   enableLogging: boolean;
   requestTimeout: number;
   retryAttempts: number;
+  isGitHubPages: boolean;
 }
 
 // Detect environment
-const isDevelopment = import.meta.env.DEV || process.env.NODE_ENV === 'development';
-const isProduction = import.meta.env.PROD || process.env.NODE_ENV === 'production';
+const isDevelopment = import.meta.env.DEV;
+const isProduction = import.meta.env.PROD;
+const isGitHubPages = window.location.hostname === 'sanketmuchhala.github.io' || 
+                     window.location.hostname.includes('github.io');
 
 // API Base URLs for different environments
 const API_URLS = {
-  development: 'https://ai-study-buddy-backend-production.up.railway.app', // Always use Railway in dev
-  production: 'https://ai-study-buddy-backend-production.up.railway.app'
+  development: 'https://ai-study-buddy-backend-production.up.railway.app',
+  production: 'https://ai-study-buddy-backend-production.up.railway.app',
+  githubPages: 'https://ai-study-buddy-backend-production.up.railway.app'
 };
 
 // Export configuration
 export const config: EnvironmentConfig = {
-  apiBaseUrl: isDevelopment ? API_URLS.development : API_URLS.production,
+  apiBaseUrl: isGitHubPages ? API_URLS.githubPages : 
+              isDevelopment ? API_URLS.development : API_URLS.production,
   isDevelopment,
   isProduction,
-  enableLogging: isDevelopment,
+  enableLogging: isDevelopment || isGitHubPages, // Enable logging on GitHub Pages for debugging
   requestTimeout: 30000, // 30 seconds
-  retryAttempts: 3
+  retryAttempts: 3,
+  isGitHubPages
 };
 
 // Debug logging
@@ -34,8 +40,10 @@ if (config.enableLogging) {
   console.log('🔧 Environment Configuration:', {
     isDevelopment,
     isProduction,
+    isGitHubPages,
     apiBaseUrl: config.apiBaseUrl,
-    location: window.location.origin
+    location: window.location.origin,
+    hostname: window.location.hostname
   });
 }
 

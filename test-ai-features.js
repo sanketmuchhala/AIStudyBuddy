@@ -1,83 +1,97 @@
-// Test script to verify AI features are working
-// Using built-in fetch (Node.js 18+)
-
-const API_BASE = 'https://ai-study-buddy-backend-production.up.railway.app';
+// Test script to verify AI features are working on GitHub Pages
+// Run this in the browser console on the deployed site
 
 async function testAIFeatures() {
-  console.log('🧪 Testing AI Study Buddy Features...\n');
-
-  // Test 1: Health Check
-  console.log('1. Testing Health Check...');
+  console.log('🧪 Testing AI Features on GitHub Pages...');
+  
   try {
-    const healthResponse = await fetch(`${API_BASE}/health`);
-    const healthData = await healthResponse.json();
-    console.log('✅ Health Check:', healthData);
-  } catch (error) {
-    console.log('❌ Health Check Failed:', error.message);
-  }
-
-  // Test 2: AI Chat
-  console.log('\n2. Testing AI Chat...');
-  try {
-    const chatResponse = await fetch(`${API_BASE}/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'http://localhost:5174'
-      },
-      body: JSON.stringify({
-        prompt: 'Hello! Can you help me study mathematics?',
-        model: 'gemini-1.5-flash',
-        userId: 'test-user-123',
-        sessionId: 'test-session-123'
-      })
-    });
-    const chatData = await chatResponse.json();
-    console.log('✅ AI Chat Response:', chatData.text ? chatData.text.substring(0, 100) + '...' : chatData);
-  } catch (error) {
-    console.log('❌ AI Chat Failed:', error.message);
-  }
-
-  // Test 3: Study Recommendations
-  console.log('\n3. Testing Study Recommendations...');
-  try {
-    const studyResponse = await fetch(`${API_BASE}/study/recommendations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'http://localhost:5174'
-      },
-      body: JSON.stringify({
-        subject: 'Mathematics',
-        progress: 75,
-        userId: 'test-user-123'
-      })
-    });
-    const studyData = await studyResponse.json();
-    console.log('✅ Study Recommendations:', studyData.recommendations ? studyData.recommendations.substring(0, 100) + '...' : studyData);
-  } catch (error) {
-    console.log('❌ Study Recommendations Failed:', error.message);
-  }
-
-  // Test 4: Database Endpoints (if available)
-  console.log('\n4. Testing Database Endpoints...');
-  try {
-    const userResponse = await fetch(`${API_BASE}/api/users`, {
-      method: 'POST',
+    // Test 1: Check if the AI service is accessible
+    const response = await fetch('https://ai-study-buddy-backend-production.up.railway.app/health', {
+      method: 'GET',
+      mode: 'cors',
       headers: {
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        userId: 'test-user-789'
-      })
+      }
     });
-    const userData = await userResponse.json();
-    console.log('✅ Create User:', userData);
+    
+    console.log('✅ Health check response:', response.ok);
+    
+    if (response.ok) {
+      // Test 2: Try a simple chat request
+      const chatResponse = await fetch('https://ai-study-buddy-backend-production.up.railway.app/chat', {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: 'Hello, this is a test message from GitHub Pages',
+          model: 'gemini-1.5-flash',
+          temperature: 0.7,
+          userId: 'test-user-github-pages'
+        })
+      });
+      
+      if (chatResponse.ok) {
+        const result = await chatResponse.json();
+        console.log('✅ Chat test successful:', result.text ? 'Response received' : 'No response text');
+        return true;
+      } else {
+        console.error('❌ Chat test failed:', chatResponse.status, chatResponse.statusText);
+        return false;
+      }
+    } else {
+      console.error('❌ Health check failed:', response.status, response.statusText);
+      return false;
+    }
   } catch (error) {
-    console.log('❌ Database Test Failed:', error.message);
+    console.error('❌ Test failed with error:', error);
+    return false;
   }
-
-  console.log('\n🎉 Testing Complete!');
 }
 
-testAIFeatures().catch(console.error);
+// Test CORS specifically
+async function testCORS() {
+  console.log('🌐 Testing CORS configuration...');
+  
+  try {
+    const response = await fetch('https://ai-study-buddy-backend-production.up.railway.app/health', {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin
+      }
+    });
+    
+    console.log('✅ CORS test passed:', response.ok);
+    return response.ok;
+  } catch (error) {
+    console.error('❌ CORS test failed:', error);
+    return false;
+  }
+}
+
+// Run tests
+console.log('🚀 Starting AI Features Test Suite...');
+console.log('📍 Current location:', window.location.href);
+console.log('🏠 Hostname:', window.location.hostname);
+
+Promise.all([
+  testAIFeatures(),
+  testCORS()
+]).then(([aiTest, corsTest]) => {
+  console.log('📊 Test Results:');
+  console.log('  AI Features:', aiTest ? '✅ PASS' : '❌ FAIL');
+  console.log('  CORS:', corsTest ? '✅ PASS' : '❌ FAIL');
+  
+  if (aiTest && corsTest) {
+    console.log('🎉 All tests passed! AI features should work on GitHub Pages.');
+  } else {
+    console.log('⚠️ Some tests failed. Check the console for details.');
+  }
+});
+
+// Export for manual testing
+window.testAIFeatures = testAIFeatures;
+window.testCORS = testCORS;

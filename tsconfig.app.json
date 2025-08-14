@@ -22,7 +22,7 @@
     "exactOptionalPropertyTypes": false,
 
     /* Vite types */
-    "types": ["vite/client", "node"]
+    "types": ["vite/client"]
   },
   "include": ["src"]
 }

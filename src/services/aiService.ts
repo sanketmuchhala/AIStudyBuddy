@@ -23,18 +23,39 @@ class AIService {
   private apiBase: string;
   private authToken: string | null = null;
   private retryCount: number = 0;
+  private isOnline: boolean = true;
 
   constructor() {
     // Use environment configuration
     this.apiBase = config.apiBaseUrl;
     
+    // Check online status
+    this.checkOnlineStatus();
+    
     if (config.enableLogging) {
       console.log('🤖 AIService initialized with:', {
         apiBase: this.apiBase,
         timeout: config.requestTimeout,
-        retries: config.retryAttempts
+        retries: config.retryAttempts,
+        isGitHubPages: config.isGitHubPages
       });
     }
+  }
+
+  private checkOnlineStatus() {
+    // Check if we're online
+    this.isOnline = navigator.onLine;
+    
+    // Listen for online/offline events
+    window.addEventListener('online', () => {
+      this.isOnline = true;
+      if (config.enableLogging) console.log('🌐 Back online');
+    });
+    
+    window.addEventListener('offline', () => {
+      this.isOnline = false;
+      if (config.enableLogging) console.log('📴 Gone offline');
+    });
   }
 
   setApiBase(url: string) {
@@ -54,6 +75,11 @@ class AIService {
       headers['Authorization'] = `Bearer ${this.authToken}`;
     }
 
+    // Add CORS headers for GitHub Pages
+    if (config.isGitHubPages) {
+      headers['Origin'] = window.location.origin;
+    }
+
     return headers;
   }
 
@@ -69,6 +95,11 @@ class AIService {
     retryCount: number = 0
   ): Promise<Response> {
     try {
+      // Check if we're online
+      if (!this.isOnline) {
+        throw new NetworkError('No internet connection', 0);
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), config.requestTimeout);
 
@@ -78,7 +109,9 @@ class AIService {
         headers: {
           ...this.getHeaders(),
           ...options.headers
-        }
+        },
+        mode: 'cors', // Explicitly set CORS mode
+        credentials: 'omit' // Don't send cookies for cross-origin requests
       });
 
       clearTimeout(timeoutId);
@@ -103,6 +136,7 @@ class AIService {
     return (
       error.name === 'TypeError' || // Network errors
       error.name === 'AbortError' || // Timeout errors
+      error.name === 'NetworkError' || // Our custom network error
       (error.statusCode >= 500 && error.statusCode < 600) || // Server errors
       error.statusCode === 429 // Rate limit
     );
@@ -173,6 +207,14 @@ class AIService {
     } catch (error) {
       const apiError = errorHandler.handleAPIError(error);
       errorHandler.logError(apiError, 'Send Message');
+      
+      // Provide fallback response for common errors
+      if (apiError.code === 'NETWORK_ERROR' || apiError.code === 'CORS_ERROR') {
+        return {
+          text: 'I\'m having trouble connecting to my AI service right now. This might be due to network issues or the service being temporarily unavailable. Please try again in a moment, or check your internet connection.',
+          error: 'Connection issue - please try again'
+        };
+      }
       
       return { 
         text: '', 
@@ -262,7 +304,7 @@ class AIService {
   // Study-specific AI methods
   async getStudyRecommendations(subject: string, currentProgress: number): Promise<string> {
     try {
-      const response = await fetch(`${this.apiBase}/study/recommendations`, {
+      const response = await this.makeRequest(`${this.apiBase}/study/recommendations`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify({
@@ -362,7 +404,7 @@ class AIService {
   // Interview-specific methods
   async uploadResume(formData: FormData): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBase}/interview/upload-resume`, {
+      const response = await this.makeRequest(`${this.apiBase}/interview/upload-resume`, {
         method: 'POST',
         body: formData // Don't set Content-Type for FormData
       });
@@ -386,7 +428,7 @@ class AIService {
     userId: string;
   }): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBase}/interview/answer`, {
+      const response = await this.makeRequest(`${this.apiBase}/interview/answer`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(data)
@@ -406,7 +448,7 @@ class AIService {
 
   async getInterviewHistory(userId: string): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBase}/interview/history/${userId}`, {
+      const response = await this.makeRequest(`${this.apiBase}/interview/history/${userId}`, {
         method: 'GET',
         headers: this.getHeaders()
       });
@@ -431,7 +473,7 @@ class AIService {
     performanceScore?: number;
   }): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBase}/study/session`, {
+      const response = await this.makeRequest(`${this.apiBase}/study/session`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(data)
