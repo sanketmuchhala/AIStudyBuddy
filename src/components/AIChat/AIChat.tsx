@@ -30,9 +30,16 @@ export const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
 
   const checkConnection = async () => {
     console.log('Checking AI service connection...');
-    const connected = await aiService.healthCheck();
-    console.log('AI service connection status:', connected);
-    setIsConnected(connected);
+    try {
+      const connected = await aiService.healthCheck();
+      console.log('AI service connection status:', connected);
+      setIsConnected(connected);
+      return connected;
+    } catch (error) {
+      console.error('Health check failed:', error);
+      setIsConnected(false);
+      return false;
+    }
   };
 
   const scrollToBottom = () => {
@@ -57,22 +64,48 @@ export const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
       const response = await aiService.sendMessage({ prompt: userMessage.content });
       console.log('AI service response:', response);
       
-      if (response.error) {
-        throw new Error(response.error);
+      // Handle both error and successful responses
+      let responseText = response.text;
+      
+      if (response.error || !responseText || responseText.trim() === '') {
+        // Use fallback response if there's an error or empty response
+        responseText = response.error || 
+          "I'm having trouble connecting to my AI service right now. Please try again in a moment. " +
+          "In the meantime, I can suggest checking your study schedule or adding new subjects to track your progress!";
       }
 
       const assistantMessage: AIMessage = {
         role: 'assistant',
-        content: response.text,
+        content: responseText,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Update connection status if successful
+      if (responseText && !response.error) {
+        setIsConnected(true);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
+      
+      // Provide helpful fallback based on user input
+      let fallbackResponse = "I'm having trouble connecting right now. ";
+      const input_lower = userMessage.content.toLowerCase();
+      
+      if (input_lower.includes('study') || input_lower.includes('learn')) {
+        fallbackResponse += "While I can't connect to my AI service, I recommend using the Smart Scheduler to plan your study sessions, or check out the Analytics tab to see your progress!";
+      } else if (input_lower.includes('schedule') || input_lower.includes('plan')) {
+        fallbackResponse += "Try using the AI Scheduler tab to automatically plan your study sessions based on your subjects and available time.";
+      } else if (input_lower.includes('help') || input_lower.includes('question')) {
+        fallbackResponse += "You can use the different tabs in the app: Dashboard for overview, Smart Scheduler for planning, Study Timer for tracking sessions, and Analytics for insights.";
+      } else {
+        fallbackResponse += "Please try again in a moment, or explore the other features in the app while I reconnect.";
+      }
+      
       const errorMessage: AIMessage = {
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        content: fallbackResponse,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -111,41 +144,41 @@ export const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-2">
-              <Bot className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">AI Chat</h2>
+              <Bot className="w-5 h-5 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI Chat</h2>
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
               <button
                 onClick={checkConnection}
-                className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded"
+                className="px-2 py-0.5 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded"
                 title="Test Connection"
               >
                 Test
               </button>
             </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300"
+              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-4 h-4" />
             </button>
             <button
               onClick={clearChat}
-              className="px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-2 py-1 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
             >
               Clear
             </button>
             <button
               onClick={onClose}
-              className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
+              className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors duration-200"
               title="Close AI Chat"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -270,7 +303,7 @@ export const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder="Ask me anything about your studies..."
               className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               rows={1}

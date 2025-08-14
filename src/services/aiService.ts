@@ -84,9 +84,14 @@ class AIService {
   }
 
   private getCurrentUserId(): string {
-    // In a real app, this would come from authentication
-    return 'demo-user-' + Math.random().toString(36).substr(2, 9);
+    // Use consistent userId for session
+    if (!this.userId) {
+      this.userId = 'demo-user-' + Math.random().toString(36).substring(2, 11);
+    }
+    return this.userId;
   }
+  
+  private userId: string | null = null;
 
   // Helper method for making API requests with retry logic
   private async makeRequest(
