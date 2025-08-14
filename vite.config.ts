@@ -19,13 +19,8 @@ export default defineConfig({
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',
-        // 👇 these two make the PWA work no matter the base path
         start_url: '.',
-        scope: '.',
-        icons: [
-          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' }
-        ]
+        scope: '.'
       }
     })
   ],
