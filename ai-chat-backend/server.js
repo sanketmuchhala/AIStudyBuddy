@@ -3,9 +3,9 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
-const { Pool } = require('pg');
 const { v4: uuidv4 } = require('uuid');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { initializeDatabase, db } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,70 +28,11 @@ if (!GOOGLE_API_KEY) {
 const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
 // Database setup
-let db;
 if (DATABASE_URL) {
-  db = new Pool({
-    connectionString: DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  // Initialize database tables
+  initializeDatabase().catch(error => {
+    console.error('❌ Database initialization failed:', error);
   });
-  
-  // Create tables if they don't exist
-  const initDB = async () => {
-    try {
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS users (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          name VARCHAR(255),
-          email VARCHAR(255) UNIQUE,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS study_sessions (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id UUID REFERENCES users(id),
-          subject VARCHAR(255),
-          duration INTEGER,
-          topics TEXT[],
-          performance_score INTEGER,
-          ai_feedback TEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS interview_sessions (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id UUID REFERENCES users(id),
-          resume_text TEXT,
-          questions_asked TEXT[],
-          user_answers TEXT[],
-          ai_scores INTEGER[],
-          ai_feedback TEXT[],
-          overall_score INTEGER,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS chat_history (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id UUID REFERENCES users(id),
-          session_id UUID,
-          role VARCHAR(20),
-          message TEXT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      
-      console.log('✅ Database tables initialized');
-    } catch (error) {
-      console.error('❌ Database initialization error:', error.message);
-    }
-  };
-  
-  initDB();
 } else {
   console.warn('⚠️  No DATABASE_URL provided, running without database');
 }
@@ -311,18 +252,21 @@ app.post('/chat', validateRequest, async (req, res) => {
     const text = await generateAIResponse(prompt, model, temperature);
     
     // Store in database if available
-    if (db && userId) {
+    if (db && userId && sessionId) {
       try {
-        await db.query(
-          'INSERT INTO chat_history (user_id, session_id, role, message) VALUES ($1, $2, $3, $4)',
-          [userId, sessionId || uuidv4(), 'user', prompt]
-        );
-        await db.query(
-          'INSERT INTO chat_history (user_id, session_id, role, message) VALUES ($1, $2, $3, $4)',
-          [userId, sessionId || uuidv4(), 'assistant', text]
-        );
+        // Create or get chat session
+        await db.createChatSession(userId, sessionId, model);
+        
+        // Save user message
+        await db.saveChatMessage(sessionId, 'user', prompt);
+        
+        // Save AI response
+        await db.saveChatMessage(sessionId, 'assistant', text);
+        
+        console.log(`💾 Chat session saved to database: ${sessionId}`);
       } catch (dbError) {
-        console.warn('Database storage failed:', dbError.message);
+        console.warn('⚠️ Failed to save chat to database:', dbError.message);
+        // Continue without failing the request
       }
     }
     
@@ -375,18 +319,21 @@ app.post('/stream', validateRequest, async (req, res) => {
       res.write(`data: ${JSON.stringify({ done: true, fullText })}\n\n`);
       
       // Store in database if available
-      if (db && userId) {
+      if (db && userId && sessionId) {
         try {
-          await db.query(
-            'INSERT INTO chat_history (user_id, session_id, role, message) VALUES ($1, $2, $3, $4)',
-            [userId, sessionId || uuidv4(), 'user', prompt]
-          );
-          await db.query(
-            'INSERT INTO chat_history (user_id, session_id, role, message) VALUES ($1, $2, $3, $4)',
-            [userId, sessionId || uuidv4(), 'assistant', fullText]
-          );
+          // Create or get chat session
+          await db.createChatSession(userId, sessionId, model);
+          
+          // Save user message
+          await db.saveChatMessage(sessionId, 'user', prompt);
+          
+          // Save AI response
+          await db.saveChatMessage(sessionId, 'assistant', fullText);
+          
+          console.log(`💾 Stream session saved to database: ${sessionId}`);
         } catch (dbError) {
-          console.warn('Database storage failed:', dbError.message);
+          console.warn('⚠️ Failed to save stream to database:', dbError.message);
+          // Continue without failing the request
         }
       }
       
@@ -464,10 +411,8 @@ app.post('/interview/upload-resume', upload.single('resume'), async (req, res) =
     // Store in database if available
     if (db && req.body.userId) {
       try {
-        await db.query(
-          'INSERT INTO interview_sessions (id, user_id, resume_text, questions_asked) VALUES ($1, $2, $3, $4)',
-          [sessionId, req.body.userId, resumeText, [firstQuestion]]
-        );
+        await db.createInterviewSession(req.body.userId, sessionId, resumeText);
+        await db.saveInterviewQA(sessionId, 1, firstQuestion);
       } catch (dbError) {
         console.warn('Database storage failed:', dbError.message);
       }
@@ -503,7 +448,7 @@ app.post('/interview/answer', async (req, res) => {
     if (db) {
       try {
         const result = await db.query(
-          'SELECT * FROM interview_sessions WHERE id = $1',
+          'SELECT * FROM interview_sessions WHERE session_id = $1',
           [sessionId]
         );
         sessionData = result.rows[0];
@@ -519,8 +464,22 @@ app.post('/interview/answer', async (req, res) => {
       });
     }
     
-    // Score the current answer
-    const currentQuestion = sessionData.questions_asked[questionNumber - 1];
+    // Get the current question from database
+    let currentQuestion = '';
+    if (db) {
+      try {
+        const questionResult = await db.query(
+          'SELECT question FROM interview_qa WHERE session_id = $1 AND question_number = $2',
+          [sessionId, questionNumber]
+        );
+        if (questionResult.rows[0]) {
+          currentQuestion = questionResult.rows[0].question;
+        }
+      } catch (dbError) {
+        console.warn('Failed to get current question:', dbError.message);
+      }
+    }
+    
     const scorePrompt = AI_PROMPTS.scoreAnswer(
       currentQuestion,
       answer,
@@ -534,20 +493,36 @@ app.post('/interview/answer', async (req, res) => {
     const score = scoreMatch ? parseInt(scoreMatch[1]) : 5;
     
     // Update database with answer and score
-    const updatedAnswers = [...(sessionData.user_answers || []), answer];
-    const updatedScores = [...(sessionData.ai_scores || []), score];
-    const updatedFeedback = [...(sessionData.ai_feedback || []), scoreResponse];
+    if (db) {
+      try {
+        await db.query(
+          'UPDATE interview_qa SET answer = $1, score = $2, feedback = $3 WHERE session_id = $4 AND question_number = $5',
+          [answer, score, scoreResponse, sessionId, questionNumber]
+        );
+      } catch (dbError) {
+        console.warn('Failed to update answer:', dbError.message);
+      }
+    }
     
     // Generate next question if we haven't reached the limit (e.g., 5 questions)
     let nextQuestion = null;
     let isComplete = false;
+    let overallScore = null;
     
     if (questionNumber < 5) {
-      const previousQA = updatedAnswers.map((ans, i) => ({
-        question: sessionData.questions_asked[i],
-        answer: ans,
-        score: updatedScores[i]
-      }));
+      // Get previous Q&A from database for context
+      const previousQA = [];
+      if (db) {
+        try {
+          const qaResult = await db.query(
+            'SELECT question, answer, score FROM interview_qa WHERE session_id = $1 AND question_number < $2 ORDER BY question_number',
+            [sessionId, questionNumber + 1]
+          );
+          previousQA.push(...qaResult.rows);
+        } catch (dbError) {
+          console.warn('Failed to get previous Q&A:', dbError.message);
+        }
+      }
       
       const nextQuestionPrompt = AI_PROMPTS.interviewQuestion(
         sessionData.resume_text,
@@ -557,32 +532,26 @@ app.post('/interview/answer', async (req, res) => {
       
       nextQuestion = await generateAIResponse(nextQuestionPrompt, 'gemini-1.5-flash', 0.8);
       
-      // Update questions array
-      const updatedQuestions = [...sessionData.questions_asked, nextQuestion];
-      
+      // Save next question to database
       if (db) {
         try {
-          await db.query(
-            'UPDATE interview_sessions SET questions_asked = $1, user_answers = $2, ai_scores = $3, ai_feedback = $4 WHERE id = $5',
-            [updatedQuestions, updatedAnswers, updatedScores, updatedFeedback, sessionId]
-          );
+          await db.saveInterviewQA(sessionId, questionNumber + 1, nextQuestion);
         } catch (dbError) {
-          console.warn('Database update failed:', dbError.message);
+          console.warn('Failed to save next question:', dbError.message);
         }
       }
     } else {
-      // Interview complete
+      // Interview complete - calculate overall score
       isComplete = true;
-      const overallScore = Math.round(updatedScores.reduce((a, b) => a + b, 0) / updatedScores.length);
-      
       if (db) {
         try {
-          await db.query(
-            'UPDATE interview_sessions SET user_answers = $1, ai_scores = $2, ai_feedback = $3, overall_score = $4 WHERE id = $5',
-            [updatedAnswers, updatedScores, updatedFeedback, overallScore, sessionId]
+          const scoresResult = await db.query(
+            'SELECT AVG(score) as avg_score FROM interview_qa WHERE session_id = $1 AND score IS NOT NULL',
+            [sessionId]
           );
+          overallScore = Math.round(scoresResult.rows[0]?.avg_score || 0);
         } catch (dbError) {
-          console.warn('Database update failed:', dbError.message);
+          console.warn('Failed to calculate overall score:', dbError.message);
         }
       }
     }
@@ -595,7 +564,7 @@ app.post('/interview/answer', async (req, res) => {
       nextQuestion,
       questionNumber: questionNumber + 1,
       isComplete,
-      overallScore: isComplete ? Math.round(updatedScores.reduce((a, b) => a + b, 0) / updatedScores.length) : null
+      overallScore
     });
     
   } catch (error) {
@@ -870,6 +839,135 @@ app.get('/', (req, res) => {
     </body>
     </html>
   `);
+});
+
+// Database endpoints
+app.post('/api/users', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'user_id is required' });
+    }
+    
+    const user = await db.createUser(userId);
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+app.get('/api/users/:userId/stats', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    const { userId } = req.params;
+    const stats = await db.getUserStats(userId);
+    res.json({ success: true, stats });
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    res.status(500).json({ error: 'Failed to get user stats' });
+  }
+});
+
+app.post('/api/study-sessions', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    const { userId, subject, durationMinutes, topics, performanceRating, notes } = req.body;
+    
+    if (!userId || !subject || !durationMinutes) {
+      return res.status(400).json({ error: 'user_id, subject, and duration_minutes are required' });
+    }
+    
+    const session = await db.saveStudySession(userId, subject, durationMinutes, topics, performanceRating, notes);
+    res.json({ success: true, session });
+  } catch (error) {
+    console.error('Save study session error:', error);
+    res.status(500).json({ error: 'Failed to save study session' });
+  }
+});
+
+app.get('/api/users/:userId/study-sessions', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    const { userId } = req.params;
+    const { limit = 20 } = req.query;
+    
+    const sessions = await db.getStudySessions(userId, parseInt(limit));
+    res.json({ success: true, sessions });
+  } catch (error) {
+    console.error('Get study sessions error:', error);
+    res.status(500).json({ error: 'Failed to get study sessions' });
+  }
+});
+
+app.post('/api/chat-sessions', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    const { userId, sessionId, model } = req.body;
+    
+    if (!userId || !sessionId) {
+      return res.status(400).json({ error: 'user_id and session_id are required' });
+    }
+    
+    const session = await db.createChatSession(userId, sessionId, model);
+    res.json({ success: true, session });
+  } catch (error) {
+    console.error('Create chat session error:', error);
+    res.status(500).json({ error: 'Failed to create chat session' });
+  }
+});
+
+app.post('/api/chat-messages', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    const { sessionId, role, content } = req.body;
+    
+    if (!sessionId || !role || !content) {
+      return res.status(400).json({ error: 'session_id, role, and content are required' });
+    }
+    
+    const message = await db.saveChatMessage(sessionId, role, content);
+    res.json({ success: true, message });
+  } catch (error) {
+    console.error('Save chat message error:', error);
+    res.status(500).json({ error: 'Failed to save chat message' });
+  }
+});
+
+app.get('/api/chat-sessions/:sessionId/messages', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ error: 'Database not available' });
+  }
+  
+  try {
+    const { sessionId } = req.params;
+    const { limit = 50 } = req.query;
+    
+    const messages = await db.getChatMessages(sessionId, parseInt(limit));
+    res.json({ success: true, messages });
+  } catch (error) {
+    console.error('Get chat messages error:', error);
+    res.status(500).json({ error: 'Failed to get chat messages' });
+  }
 });
 
 // 404 handler

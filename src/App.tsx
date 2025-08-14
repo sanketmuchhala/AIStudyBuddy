@@ -240,24 +240,24 @@ function App() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar Navigation */}
-          <aside className="lg:w-64 flex-shrink-0">
-            <nav className="card p-4">
-              <div className="space-y-2">
+        <div className="flex flex-col xl:flex-row gap-6">
+          {/* Sidebar Navigation - More compact on larger screens */}
+          <aside className="xl:w-56 flex-shrink-0">
+            <nav className="card p-3">
+              <div className="space-y-1">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id as TabType)}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
+                      className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-left transition-colors duration-200 text-sm ${
                         activeTab === tab.id
                           ? 'bg-primary-600 text-white'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-4 w-4" />
                       <span className="font-medium">{tab.label}</span>
                     </button>
                   );
@@ -265,21 +265,21 @@ function App() {
               </div>
             </nav>
 
-            {/* Quick Stats */}
-            <div className="card p-4 mt-4">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Quick Stats</h3>
-              <div className="space-y-3">
+            {/* Quick Stats - More compact */}
+            <div className="card p-3 mt-3">
+              <h3 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">Quick Stats</h3>
+              <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Total Subjects</span>
-                  <span className="font-semibold text-primary-600">{subjects.length}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Subjects</span>
+                  <span className="text-sm font-semibold text-primary-600">{subjects.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Study Sessions</span>
-                  <span className="font-semibold text-success-600">{sessions.length}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Sessions</span>
+                  <span className="text-sm font-semibold text-success-600">{sessions.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Total Hours</span>
-                  <span className="font-semibold text-warning-600">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">Hours</span>
+                  <span className="text-sm font-semibold text-warning-600">
                     {Math.round(sessions.reduce((sum, s) => sum + s.duration, 0) / 60)}h
                   </span>
                 </div>
@@ -287,7 +287,7 @@ function App() {
             </div>
           </aside>
 
-          {/* Main Content */}
+          {/* Main Content - Takes up more space */}
           <main className="flex-1 min-w-0">
             <div className="animate-fade-in-scale">
               {renderActiveTab()}

@@ -177,9 +177,9 @@ export function Dashboard({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="xl:col-span-3 space-y-6">
           {/* Progress Overview */}
           <ProgressOverview
             subjects={subjects}
@@ -210,7 +210,7 @@ export function Dashboard({
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {subjects.map((subject) => (
                   <SubjectCard
                     key={subject.id}
@@ -227,64 +227,62 @@ export function Dashboard({
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <QuickActions subjects={subjects} />
+        {/* Compact Sidebar */}
+        <div className="xl:col-span-1 space-y-4">
+          {/* Quick Actions - More compact */}
+          <div className="card p-4">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Quick Actions</h3>
+            <QuickActions subjects={subjects} />
+          </div>
 
-          {/* Upcoming Deadlines */}
-          <UpcomingDeadlines subjects={subjects} />
+          {/* Upcoming Deadlines - Limited to 3 */}
+          <div className="card p-4">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Upcoming Deadlines</h3>
+            <UpcomingDeadlines subjects={subjects.slice(0, 3)} />
+          </div>
 
-          {/* AI Recommendations */}
+          {/* AI Recommendations - Limited to 2 */}
           {aiInsights?.adaptiveRecommendations && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="card p-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
                 AI Recommendations
               </h3>
-              <div className="space-y-3">
-                {aiInsights.adaptiveRecommendations.slice(0, 3).map((rec: any, index: number) => (
+              <div className="space-y-2">
+                {aiInsights.adaptiveRecommendations.slice(0, 2).map((rec: any, index: number) => (
                   <RecommendationCard key={index} recommendation={rec} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Study Techniques */}
+          {/* Study Techniques - More compact */}
           {aiInsights?.studyTechniqueSuggestions && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Recommended Techniques
+            <div className="card p-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                Study Tips
               </h3>
-              <div className="space-y-3">
-                {aiInsights.studyTechniqueSuggestions.slice(0, 3).map((suggestion: any, index: number) => (
-                  <div key={index} className="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-                    <h4 className="font-medium text-primary-900 dark:text-primary-100 capitalize">
+              <div className="space-y-2">
+                {aiInsights.studyTechniqueSuggestions.slice(0, 2).map((suggestion: any, index: number) => (
+                  <div key={index} className="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                    <h4 className="text-sm font-medium text-primary-900 dark:text-primary-100 capitalize">
                       {suggestion.technique.replace('-', ' ')}
                     </h4>
-                    <p className="text-sm text-primary-700 dark:text-primary-300 mt-1">
+                    <p className="text-xs text-primary-700 dark:text-primary-300 mt-1">
                       {suggestion.reasoning}
                     </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-primary-600 dark:text-primary-400">
-                        Expected improvement: {Math.round(suggestion.expectedImprovement * 100)}%
-                      </span>
-                      <span className="text-xs text-primary-600 dark:text-primary-400">
-                        Confidence: {Math.round(suggestion.confidenceLevel * 100)}%
-                      </span>
-                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Today's Schedule Preview */}
+          {/* Today's Schedule Preview - Compact */}
           {aiInsights?.recommendedSchedule && (
-            <div className="card p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Calendar className="h-5 w-5 text-primary-600" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Today's AI Schedule
+            <div className="card p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <Calendar className="h-4 w-4 text-primary-600" />
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Today's Schedule
                 </h3>
               </div>
               <div className="space-y-2">
@@ -293,22 +291,22 @@ export function Dashboard({
                     const today = new Date().toDateString();
                     return session.startTime.toDateString() === today;
                   })
-                  .slice(0, 3)
+                  .slice(0, 2)
                   .map((session: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                    <div key={index} className="flex items-center justify-between py-1 text-xs">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-gray-900 dark:text-white truncate">
                           {subjects.find(s => s.id === session.subjectId)?.name || 'Unknown'}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-gray-500 dark:text-gray-400">
                           {session.technique.replace('-', ' ')}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-gray-900 dark:text-white">
                           {session.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-gray-500 dark:text-gray-400">
                           {session.duration}m
                         </p>
                       </div>
