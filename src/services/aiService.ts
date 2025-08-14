@@ -1,3 +1,6 @@
+import config from '../config/environment';
+import errorHandler, { APIError, NetworkError } from '../utils/errorHandler';
+
 export interface AIMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -19,10 +22,19 @@ export interface AIResponse {
 class AIService {
   private apiBase: string;
   private authToken: string | null = null;
+  private retryCount: number = 0;
 
   constructor() {
-    // Railway backend URL
-    this.apiBase = 'https://ai-study-buddy-backend-production.up.railway.app';
+    // Use environment configuration
+    this.apiBase = config.apiBaseUrl;
+    
+    if (config.enableLogging) {
+      console.log('🤖 AIService initialized with:', {
+        apiBase: this.apiBase,
+        timeout: config.requestTimeout,
+        retries: config.retryAttempts
+      });
+    }
   }
 
   setApiBase(url: string) {
@@ -50,52 +62,121 @@ class AIService {
     return 'demo-user-' + Math.random().toString(36).substr(2, 9);
   }
 
+  // Helper method for making API requests with retry logic
+  private async makeRequest(
+    url: string,
+    options: RequestInit,
+    retryCount: number = 0
+  ): Promise<Response> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), config.requestTimeout);
+
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          ...this.getHeaders(),
+          ...options.headers
+        }
+      });
+
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      if (retryCount < config.retryAttempts && this.shouldRetry(error)) {
+        if (config.enableLogging) {
+          console.warn(`🔄 Retrying request (${retryCount + 1}/${config.retryAttempts}):`, url);
+        }
+        
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+        return this.makeRequest(url, options, retryCount + 1);
+      }
+      throw error;
+    }
+  }
+
+  // Determine if error should trigger a retry
+  private shouldRetry(error: any): boolean {
+    // Retry network errors, timeouts, and certain HTTP status codes
+    return (
+      error.name === 'TypeError' || // Network errors
+      error.name === 'AbortError' || // Timeout errors
+      (error.statusCode >= 500 && error.statusCode < 600) || // Server errors
+      error.statusCode === 429 // Rate limit
+    );
+  }
+
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.apiBase}/health`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000)
+      const response = await this.makeRequest(`${this.apiBase}/health`, {
+        method: 'GET'
       });
+      
+      if (config.enableLogging) {
+        console.log('❤️ Health check:', response.ok ? 'OK' : 'FAILED');
+      }
+      
       return response.ok;
     } catch (error) {
-      console.warn('Health check failed:', error);
+      const apiError = errorHandler.handleAPIError(error);
+      errorHandler.logError(apiError, 'Health Check');
       return false;
     }
   }
 
   async sendMessage(request: AIRequest): Promise<AIResponse> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
-    };
-
-    if (this.authToken) {
-      headers['Authorization'] = `Bearer ${this.authToken}`;
-    }
-
     try {
-      const response = await fetch(`${this.apiBase}/chat`, {
+      if (config.enableLogging) {
+        console.log('💬 Sending message:', {
+          model: request.model || 'gemini-1.5-flash',
+          promptLength: request.prompt.length,
+          temperature: request.temperature || 0.7
+        });
+      }
+
+      const response = await this.makeRequest(`${this.apiBase}/chat`, {
         method: 'POST',
-        headers,
         body: JSON.stringify({
           prompt: request.prompt,
           model: request.model || 'gemini-1.5-flash',
           temperature: request.temperature || 0.7,
-          system: request.system
+          system: request.system,
+          userId: this.getCurrentUserId()
         })
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Network error' }));
-        throw new Error(error.message || `HTTP ${response.status}`);
+        const errorData = await response.json().catch(() => ({ 
+          message: `HTTP ${response.status}` 
+        }));
+        
+        const networkError = new NetworkError(
+          errorData.message || 'Request failed',
+          response.status,
+          errorData
+        );
+        throw networkError;
       }
 
       const result = await response.json();
-      return { text: result.text };
+      
+      if (config.enableLogging) {
+        console.log('✅ Message response received:', {
+          length: result.text?.length || 0
+        });
+      }
+      
+      return { text: result.text || '' };
+      
     } catch (error) {
-      console.error('AI request failed:', error);
+      const apiError = errorHandler.handleAPIError(error);
+      errorHandler.logError(apiError, 'Send Message');
+      
       return { 
         text: '', 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: errorHandler.getUserMessage(apiError)
       };
     }
   }

@@ -1,44 +1,84 @@
-# 🎓 Smart AI Study Planner
+# Smart AI Study Planner
 
-> **Intelligent learning assistant powered by advanced algorithms**
+> Intelligent learning assistant powered by advanced algorithms
 
 A production-ready React TypeScript application that uses real AI algorithms to optimize study schedules, provide adaptive learning recommendations, and enhance interview preparation through intelligent coaching.
 
-## ✨ Key Features
+## System Architecture
 
-### 🧠 **Real AI Intelligence**
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[React App] --> B[TypeScript Components]
+        B --> C[State Management]
+        C --> D[Local Storage]
+    end
+    
+    subgraph "AI Algorithms Layer"
+        E[Spaced Repetition Engine] --> F[Schedule Optimizer]
+        F --> G[Pattern Analyzer]
+        G --> H[Recommendation Engine]
+        H --> I[Performance Predictor]
+        I --> J[Interview Coach]
+    end
+    
+    subgraph "Data Layer"
+        K[Study Sessions] --> L[Subject Data]
+        L --> M[Progress Tracking]
+        M --> N[Analytics Data]
+    end
+    
+    subgraph "External Services"
+        O[Google Gemini API] --> P[AI Chat Backend]
+        P --> Q[Railway Deployment]
+    end
+    
+    A --> E
+    A --> K
+    A --> O
+    E --> K
+    F --> K
+    G --> K
+    H --> K
+    I --> K
+    J --> O
+```
+
+## Key Features
+
+### Real AI Intelligence
 - **Spaced Repetition Algorithm (SM-2)**: Scientifically optimizes review intervals for maximum retention
 - **Cognitive Load Optimization**: Balances difficult and easy subjects throughout the day
 - **Adaptive Learning Analysis**: Learns from your study patterns and adjusts recommendations
 - **Performance Prediction Models**: Forecasts study outcomes and success probability
 
-### 📅 **Smart Schedule Generation**
+### Smart Schedule Generation
 - **Multi-factor Optimization**: Considers deadlines, difficulty, cognitive load, and personal productivity patterns
 - **Deadline Pressure Weighting**: Automatically prioritizes urgent subjects
 - **Peak Hour Alignment**: Schedules challenging topics during your most productive times
 - **Dynamic Replanning**: Adjusts schedule based on actual progress and performance
 
-### 📊 **Advanced Analytics Dashboard**
+### Advanced Analytics Dashboard
 - **Learning Velocity Tracking**: Monitors your study speed and effectiveness over time
 - **Productivity Pattern Analysis**: Identifies your optimal study times and patterns
 - **Retention Curve Visualization**: Shows memory decay and reinforcement patterns
 - **Risk Assessment**: Predicts potential study bottlenecks and burnout risks
 
-### 💼 **AI Interview Coach**
+### AI Interview Coach
 - **Adaptive Difficulty Progression**: Adjusts question difficulty based on your performance
 - **Industry-Specific Questions**: Technical, behavioral, and coding challenges
 - **Answer Quality Analysis**: Provides intelligent feedback on response completeness
 - **Mock Interview Simulation**: Realistic timed interview experiences
 
-### 🎯 **Personalized Study Techniques**
+### Personalized Study Techniques
 - **Technique Effectiveness Analysis**: Tracks which methods work best for you
 - **Subject-Specific Recommendations**: Suggests optimal techniques per subject type
 - **Learning Style Adaptation**: Adjusts to visual, auditory, or kinesthetic preferences
 - **Progress-Based Adjustments**: Modifies difficulty and techniques based on mastery
 
-## 🔬 **Sophisticated Algorithms**
+## Sophisticated Algorithms
 
-### 1. **Spaced Repetition Engine**
+### 1. Spaced Repetition Engine
 ```typescript
 // SM-2 Algorithm Implementation
 function calculateNextReview(quality: number, easeFactor: number, interval: number) {
@@ -48,7 +88,7 @@ function calculateNextReview(quality: number, easeFactor: number, interval: numb
 }
 ```
 
-### 2. **Schedule Optimization**
+### 2. Schedule Optimization
 ```typescript
 // Multi-objective optimization considering:
 // - Deadline urgency (exponential weighting)
@@ -60,7 +100,7 @@ function generateOptimalSchedule(subjects, constraints, productivityPattern) {
 }
 ```
 
-### 3. **Adaptive Learning Analysis**
+### 3. Adaptive Learning Analysis
 ```typescript
 // Machine learning approach to analyze user patterns
 class AdaptiveLearningAnalyzer {
@@ -72,7 +112,7 @@ class AdaptiveLearningAnalyzer {
 }
 ```
 
-### 4. **Performance Prediction**
+### 4. Performance Prediction
 ```typescript
 // Predicts study outcomes using multiple factors
 function predictSubjectCompletion(subjects, sessions, productivityPattern) {
@@ -82,23 +122,32 @@ function predictSubjectCompletion(subjects, sessions, productivityPattern) {
 }
 ```
 
-## 🚀 **Getting Started**
+## Getting Started
 
-### **Development**
+### Development
 ```bash
 npm install
 npm run dev
 ```
 
-### **Production Build**
+### Production Build
 ```bash
 npm run build
 npm run preview
 ```
 
-### **Deployment Options**
+### Backend Setup
+```bash
+cd ai-chat-backend
+cp .env.example .env
+# Edit .env with your Google API key
+npm install
+npm start
+```
 
-#### **Netlify** (Recommended)
+### Deployment Options
+
+#### Netlify (Recommended)
 ```bash
 # Build the project
 npm run build
@@ -108,7 +157,7 @@ npm run build
 # Or connect your GitHub repository for automatic deployments
 ```
 
-#### **Vercel**
+#### Vercel
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -117,7 +166,7 @@ npm i -g vercel
 vercel --prod
 ```
 
-#### **GitHub Pages**
+#### GitHub Pages
 ```bash
 # Install gh-pages
 npm install --save-dev gh-pages
@@ -129,16 +178,16 @@ npm install --save-dev gh-pages
 npm run deploy
 ```
 
-## 🏗️ **Architecture**
+## Architecture
 
-### **Frontend Stack**
+### Frontend Stack
 - **React 18** with TypeScript for type safety
 - **Vite** for fast development and optimized builds
 - **TailwindCSS** for responsive, modern UI
 - **Date-fns** for intelligent date manipulation
 - **Lucide React** for consistent iconography
 
-### **Smart Algorithms**
+### Smart Algorithms
 ```
 src/algorithms/
 ├── spacedRepetition.ts      # SM-2 algorithm implementation
@@ -149,7 +198,7 @@ src/algorithms/
 └── interviewCoach.ts        # AI interview coaching system
 ```
 
-### **Component Architecture**
+### Component Architecture
 ```
 src/components/
 ├── Dashboard/              # Main dashboard with AI insights
@@ -160,108 +209,108 @@ src/components/
 └── Settings/              # Personalization and preferences
 ```
 
-## 📊 **AI Capabilities**
+## AI Capabilities
 
-### **Learning Science Implementation**
+### Learning Science Implementation
 - **Ebbinghaus Forgetting Curve**: Mathematical model for memory retention
 - **Cognitive Load Theory**: Balances mental effort across study sessions
 - **Spaced Repetition**: Optimizes review timing for long-term retention
 - **Interleaving**: Mixes subject types for improved discrimination
 
-### **Machine Learning Features**
+### Machine Learning Features
 - **Pattern Recognition**: Identifies personal productivity patterns
 - **Predictive Modeling**: Forecasts study outcomes and success rates
 - **Adaptive Algorithms**: Adjusts difficulty and recommendations based on performance
 - **Risk Assessment**: Predicts and prevents study burnout and bottlenecks
 
-### **Personalization Engine**
+### Personalization Engine
 - **Learning Style Detection**: Adapts to individual preferences
 - **Performance Analysis**: Tracks effectiveness across different techniques
 - **Motivation Modeling**: Adjusts recommendations based on progress momentum
 - **Goal Achievement Prediction**: Calculates probability of meeting deadlines
 
-## 🔧 **Customization**
+## Customization
 
-### **Algorithm Tuning**
+### Algorithm Tuning
 The AI algorithms can be fine-tuned by modifying parameters in:
 - `spacedRepetition.ts` - Adjust retention models
 - `scheduleOptimizer.ts` - Modify optimization weights
 - `patternAnalyzer.ts` - Change pattern detection sensitivity
 
-### **UI Themes**
+### UI Themes
 Customize the appearance by modifying TailwindCSS variables in:
 - `tailwind.config.js` - Color schemes and design tokens
 - `index.css` - Custom animations and effects
 
-## 📈 **Performance**
+## Performance
 
-### **Optimizations**
+### Optimizations
 - **Lazy Loading**: Components load on demand
 - **Memoization**: Expensive calculations cached
 - **Local Storage**: Efficient data persistence
 - **PWA Caching**: Offline functionality with service workers
 
-### **Metrics**
+### Metrics
 - **Bundle Size**: ~263KB gzipped (production)
 - **Load Time**: <2s on 3G connection
 - **Performance Score**: 95+ (Lighthouse)
 - **Accessibility**: WCAG 2.1 AA compliant
 
-## 🔒 **Privacy & Security**
+## Privacy & Security
 
-### **Data Protection**
+### Data Protection
 - **Local Storage Only**: No data sent to external servers
 - **Privacy by Design**: No tracking or analytics
 - **Offline Capable**: Works completely offline
 - **Export Functionality**: Full data portability
 
-## 🧪 **Testing & Quality**
+## Testing & Quality
 
-### **Code Quality**
+### Code Quality
 - **TypeScript**: Full type safety and IntelliSense
 - **ESLint**: Code quality and consistency
 - **Prettier**: Automatic code formatting
 - **Modern React**: Hooks, context, and best practices
 
-## 🚢 **Deployment Status**
+## Deployment Status
 
-✅ **Production Ready**
+**Production Ready**
 - Built and tested
 - PWA enabled
 - Performance optimized
 - Mobile responsive
 - Offline capable
 
-## 📖 **Usage Examples**
+## Usage Examples
 
-### **Study Planning**
+### Study Planning
 1. Add subjects with deadlines and difficulty ratings
 2. Set your productivity preferences and peak hours
 3. Generate AI-optimized study schedule
 4. Track progress with intelligent analytics
 
-### **Interview Preparation**
+### Interview Preparation
 1. Select question category (technical/behavioral/coding)
 2. Practice with adaptive difficulty progression
 3. Receive AI feedback on answer quality
 4. Track readiness score and improvement areas
 
-### **Performance Analysis**
+### Performance Analysis
 1. Review learning velocity and effectiveness trends
 2. Identify optimal study times and techniques
 3. Get personalized recommendations for improvement
 4. Monitor risk factors and burnout prevention
 
-## 🤝 **Contributing**
+## Contributing
 
 This is a sophisticated AI study planner that demonstrates real machine learning concepts applied to education. The algorithms are based on peer-reviewed research in cognitive science and learning theory.
 
-## 📜 **License**
+## License
 
 MIT License - feel free to use and modify for your educational projects.
 
 ---
 
-**Built with 🧠 for intelligent learning**
+**Built for intelligent learning**
 
 *This application demonstrates production-ready AI algorithms applied to education, featuring real spaced repetition, cognitive load optimization, and adaptive learning systems.*

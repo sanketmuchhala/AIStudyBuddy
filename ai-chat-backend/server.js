@@ -11,8 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Configuration
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://sanketmuchhala.github.io';
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://sanketmuchhala.github.io,http://localhost:3000,http://localhost:5173,http://localhost:8080,http://localhost:5174,http://localhost:5175,http://localhost:5176';
 const API_AUTH_TOKEN = process.env.API_AUTH_TOKEN;
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -102,14 +102,18 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // Check if origin is in allowed list
-    if (ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed))) {
+    // Check if origin is in allowed list or localhost for development
+    if (ALLOWED_ORIGINS.some(allowed => origin === allowed || origin.startsWith(allowed)) ||
+        origin?.includes('localhost') || origin?.includes('127.0.0.1')) {
       return callback(null, true);
     }
     
+    console.warn(`CORS blocked origin: ${origin}`);
     return callback(new Error('Not allowed by CORS'));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -327,6 +331,79 @@ app.post('/chat', validateRequest, async (req, res) => {
     
   } catch (error) {
     handleError(error, req, res, 'Chat');
+  }
+});
+
+// Streaming chat endpoint
+app.post('/stream', validateRequest, async (req, res) => {
+  try {
+    const { prompt, model, temperature } = req.validatedBody;
+    const { userId, sessionId } = req.body;
+    
+    console.log(`🔄 Stream request: ${model}, prompt length: ${prompt.length}`);
+    
+    // Set SSE headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': req.headers.origin || '*',
+      'Access-Control-Allow-Credentials': 'true'
+    });
+
+    // Send initial connection
+    res.write('data: {"status": "connected"}\n\n');
+
+    try {
+      const genModel = genAI.getGenerativeModel({ 
+        model: model || 'gemini-1.5-flash',
+        generationConfig: { temperature: temperature || 0.7 }
+      });
+      
+      const result = await genModel.generateContentStream(prompt);
+      let fullText = '';
+      
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        if (chunkText) {
+          fullText += chunkText;
+          res.write(`data: ${JSON.stringify({ delta: chunkText })}\n\n`);
+        }
+      }
+      
+      // Send completion signal
+      res.write(`data: ${JSON.stringify({ done: true, fullText })}\n\n`);
+      
+      // Store in database if available
+      if (db && userId) {
+        try {
+          await db.query(
+            'INSERT INTO chat_history (user_id, session_id, role, message) VALUES ($1, $2, $3, $4)',
+            [userId, sessionId || uuidv4(), 'user', prompt]
+          );
+          await db.query(
+            'INSERT INTO chat_history (user_id, session_id, role, message) VALUES ($1, $2, $3, $4)',
+            [userId, sessionId || uuidv4(), 'assistant', fullText]
+          );
+        } catch (dbError) {
+          console.warn('Database storage failed:', dbError.message);
+        }
+      }
+      
+      console.log(`✅ Stream completed: ${fullText.length} characters`);
+      
+    } catch (streamError) {
+      console.error('Stream error:', streamError);
+      res.write(`data: ${JSON.stringify({ error: true, message: streamError.message })}\n\n`);
+    }
+    
+    res.end();
+    
+  } catch (error) {
+    console.error('Stream setup error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'stream_error', message: error.message });
+    }
   }
 });
 
