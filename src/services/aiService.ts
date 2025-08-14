@@ -23,17 +23,38 @@ class AIService {
   private apiBase: string;
   private authToken: string | null = null;
   private retryCount: number = 0;
+  private isOnline: boolean = true;
 
   constructor() {
     // Use environment configuration
     this.apiBase = config.apiBaseUrl;
     
+    // Check online status
+    this.checkOnlineStatus();
+    
     if (config.enableLogging) {
       console.log('🤖 AIService initialized with:', {
         apiBase: this.apiBase,
         timeout: config.requestTimeout,
-        retries: config.retryAttempts
+        retries: config.retryAttempts,
+        isGitHubPages: config.isGitHubPages
       });
+    }
+  }
+
+  private async checkOnlineStatus() {
+    try {
+      const response = await fetch(`${this.apiBase}/health`, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      this.isOnline = response.ok;
+    } catch (error) {
+      this.isOnline = false;
+      console.warn('⚠️ AI Service offline, using fallback mode');
     }
   }
 
@@ -52,6 +73,11 @@ class AIService {
 
     if (this.authToken) {
       headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
+    // Add CORS headers for GitHub Pages
+    if (config.isGitHubPages) {
+      headers['Origin'] = window.location.origin;
     }
 
     return headers;
@@ -75,6 +101,8 @@ class AIService {
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
+        mode: 'cors', // Explicitly set CORS mode
+        credentials: 'omit', // Don't send cookies for cross-origin requests
         headers: {
           ...this.getHeaders(),
           ...options.headers
@@ -118,15 +146,42 @@ class AIService {
         console.log('❤️ Health check:', response.ok ? 'OK' : 'FAILED');
       }
       
+      this.isOnline = response.ok;
       return response.ok;
     } catch (error) {
       const apiError = errorHandler.handleAPIError(error);
       errorHandler.logError(apiError, 'Health Check');
+      this.isOnline = false;
       return false;
     }
   }
 
+  // Fallback response generator for offline mode
+  private generateFallbackResponse(prompt: string): string {
+    const lowerPrompt = prompt.toLowerCase();
+    
+    if (lowerPrompt.includes('study') && lowerPrompt.includes('recommend')) {
+      return "Based on your study patterns, I recommend focusing on active recall techniques like spaced repetition and practice testing. Consider breaking your study sessions into 25-minute focused blocks with 5-minute breaks.";
+    }
+    
+    if (lowerPrompt.includes('schedule') || lowerPrompt.includes('plan')) {
+      return "For optimal learning, schedule your most challenging subjects during your peak productivity hours. Aim for 2-3 hour study blocks with short breaks every 45 minutes.";
+    }
+    
+    if (lowerPrompt.includes('motivation') || lowerPrompt.includes('motivated')) {
+      return "Remember your long-term goals and break them into smaller, achievable milestones. Celebrate small wins and maintain a consistent study routine to build momentum.";
+    }
+    
+    return "I'm currently in offline mode, but I can still provide general study advice. Focus on active learning techniques, maintain consistent study habits, and don't forget to take regular breaks.";
+  }
+
   async sendMessage(request: AIRequest): Promise<AIResponse> {
+    // If offline, return fallback response
+    if (!this.isOnline) {
+      const fallbackText = this.generateFallbackResponse(request.prompt);
+      return { text: fallbackText };
+    }
+
     try {
       if (config.enableLogging) {
         console.log('💬 Sending message:', {
@@ -174,8 +229,10 @@ class AIService {
       const apiError = errorHandler.handleAPIError(error);
       errorHandler.logError(apiError, 'Send Message');
       
+      // Return fallback response on error
+      const fallbackText = this.generateFallbackResponse(request.prompt);
       return { 
-        text: '', 
+        text: fallbackText, 
         error: errorHandler.getUserMessage(apiError)
       };
     }
@@ -262,7 +319,7 @@ class AIService {
   // Study-specific AI methods
   async getStudyRecommendations(subject: string, currentProgress: number): Promise<string> {
     try {
-      const response = await fetch(`${this.apiBase}/study/recommendations`, {
+      const response = await this.makeRequest(`${this.apiBase}/study/recommendations`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify({
@@ -362,7 +419,7 @@ class AIService {
   // Interview-specific methods
   async uploadResume(formData: FormData): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBase}/interview/upload-resume`, {
+      const response = await this.makeRequest(`${this.apiBase}/interview/upload-resume`, {
         method: 'POST',
         body: formData // Don't set Content-Type for FormData
       });
@@ -386,7 +443,7 @@ class AIService {
     userId: string;
   }): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBase}/interview/answer`, {
+      const response = await this.makeRequest(`${this.apiBase}/interview/answer`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(data)
@@ -406,7 +463,7 @@ class AIService {
 
   async getInterviewHistory(userId: string): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBase}/interview/history/${userId}`, {
+      const response = await this.makeRequest(`${this.apiBase}/interview/history/${userId}`, {
         method: 'GET',
         headers: this.getHeaders()
       });
@@ -431,7 +488,7 @@ class AIService {
     performanceScore?: number;
   }): Promise<any> {
     try {
-      const response = await fetch(`${this.apiBase}/study/session`, {
+      const response = await this.makeRequest(`${this.apiBase}/study/session`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(data)
