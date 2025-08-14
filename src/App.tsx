@@ -43,7 +43,7 @@ function App() {
   const [subjects, setSubjects] = useLocalStorage<Subject[]>('subjects', []);
   const [sessions, setSessions] = useLocalStorage<StudySession[]>('sessions', []);
   const [preferences, setPreferences] = useLocalStorage<UserPreferences>('preferences', defaultPreferences);
-  const [darkMode, setDarkMode] = useState(preferences.darkMode);
+  const [darkMode, setDarkMode] = useState(true); // Force dark mode always on
   const [showAIChat, setShowAIChat] = useState(false);
   const [showAIStudyAssistant, setShowAIStudyAssistant] = useState(false);
 
@@ -189,19 +189,19 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen dark" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      <header style={{ backgroundColor: '#0a0a0a', borderBottomColor: '#333333' }} className="shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-primary-600 rounded-lg">
-                <Brain className="h-6 w-6 text-white" />
+              <div className="p-2 rounded-lg" style={{ background: 'linear-gradient(135deg, #00ff88 0%, #0066ff 100%)' }}>
+                <Brain className="h-6 w-6 text-black" />
               </div>
               <div>
-                <h1 className="text-xl font-bold gradient-text">Smart AI Study Planner</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Powered by AI • Enhanced Learning</p>
+                <h1 className="text-xl font-bold" style={{ background: 'linear-gradient(135deg, #00ff88 0%, #0066ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Smart AI Study Planner</h1>
+                <p className="text-xs" style={{ color: '#888888' }}>Powered by AI • Enhanced Learning</p>
               </div>
             </div>
 
@@ -209,22 +209,20 @@ function App() {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowAIStudyAssistant(true)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-                  showAIStudyAssistant 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
-                }`}
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-black font-medium"
+                style={{ 
+                  background: showAIStudyAssistant ? '#00ff88' : 'linear-gradient(135deg, #ff0080 0%, #ff6600 100%)',
+                }}
               >
                 <Sparkles className="h-4 w-4" />
                 <span className="text-sm font-medium">AI Assistant</span>
               </button>
               <button
                 onClick={() => setShowAIChat(true)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-                  showAIChat 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-black font-medium"
+                style={{ 
+                  background: showAIChat ? '#00ff88' : 'linear-gradient(135deg, #00ff88 0%, #0066ff 100%)',
+                }}
               >
                 <Bot className="h-4 w-4" />
                 <span className="text-sm font-medium">AI Chat</span>
