@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Copy, Settings, X, Loader2 } from 'lucide-react';
 import { aiService, AIMessage } from '../../services/aiService';
+import config from '../../config/environment';
 
 interface AIChatProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ export const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [apiBase, setApiBase] = useState('https://your-railway-app.railway.app');
+  const [apiBase, setApiBase] = useState(config.apiBaseUrl);
   const [authToken, setAuthToken] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -110,7 +111,7 @@ export const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">

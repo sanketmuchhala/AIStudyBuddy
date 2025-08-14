@@ -97,6 +97,71 @@
   .transform-style-3d {
     transform-style: preserve-3d;
   }
+  
+  /* Line clamping utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  
+  /* Responsive spacing utilities */
+  .space-y-responsive > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  @media (min-width: 768px) {
+    .space-y-responsive > * + * {
+      margin-top: 1rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .space-y-responsive > * + * {
+      margin-top: 1.5rem;
+    }
+  }
+  
+  /* Compact sidebar utilities */
+  .sidebar-compact {
+    width: 280px;
+  }
+  
+  @media (max-width: 1023px) {
+    .sidebar-compact {
+      width: 100%;
+    }
+  }
+  
+  /* Text truncation utilities */
+  .truncate-2-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .truncate-3-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 /* Custom animations */

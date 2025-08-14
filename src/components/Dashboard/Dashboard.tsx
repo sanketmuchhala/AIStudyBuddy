@@ -94,23 +94,23 @@ export function Dashboard({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Welcome Header */}
-      <div className="card p-6">
+      <div className="card p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
               Welcome to your AI Study Dashboard
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Your personalized learning assistant powered by advanced algorithms
             </p>
           </div>
           <button
             onClick={() => setShowAddSubject(true)}
-            className="btn-primary flex items-center space-x-2"
+            className="btn-primary flex items-center space-x-2 text-sm px-3 py-2"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-4 w-4" />
             <span>Add Subject</span>
           </button>
         </div>
@@ -118,57 +118,57 @@ export function Dashboard({
 
       {/* AI Insights Summary */}
       {aiInsights && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-primary-600" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="card p-3">
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 bg-primary-100 dark:bg-primary-900 rounded-lg">
+                <TrendingUp className="h-4 w-4 text-primary-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Learning Velocity</p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                <p className="text-xs text-gray-600 dark:text-gray-400">Learning Velocity</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {aiInsights.velocityData?.currentVelocity?.toFixed(1) || '0.0'}h/day
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="card p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-success-100 dark:bg-success-900 rounded-lg">
-                <Target className="h-5 w-5 text-success-600" />
+          <div className="card p-3">
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 bg-success-100 dark:bg-success-900 rounded-lg">
+                <Target className="h-4 w-4 text-success-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Success Rate</p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                <p className="text-xs text-gray-600 dark:text-gray-400">Success Rate</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {Math.round(aiInsights.performanceAnalysis?.goalAchievementRate * 100 || 0)}%
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="card p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-warning-100 dark:bg-warning-900 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-warning-600" />
+          <div className="card p-3">
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 bg-warning-100 dark:bg-warning-900 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-warning-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Risk Level</p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
+                <p className="text-xs text-gray-600 dark:text-gray-400">Risk Level</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white capitalize">
                   {aiInsights.riskAssessment?.overallRisk || 'Low'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="card p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <BookOpen className="h-5 w-5 text-purple-600" />
+          <div className="card p-3">
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                <BookOpen className="h-4 w-4 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Active Subjects</p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                <p className="text-xs text-gray-600 dark:text-gray-400">Active Subjects</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {subjects.length}
                 </p>
               </div>
@@ -177,9 +177,9 @@ export function Dashboard({
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Main Content */}
-        <div className="xl:col-span-3 space-y-6">
+        <div className="lg:col-span-3 space-y-4">
           {/* Progress Overview */}
           <ProgressOverview
             subjects={subjects}
@@ -188,29 +188,29 @@ export function Dashboard({
           />
 
           {/* Subjects List */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Your Subjects</h3>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Your Subjects</h3>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {subjects.length} subjects
               </span>
             </div>
             
             {subjects.length === 0 ? (
-              <div className="text-center py-8">
-                <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <div className="text-center py-6">
+                <BookOpen className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                   No subjects added yet. Add your first subject to get started!
                 </p>
                 <button
                   onClick={() => setShowAddSubject(true)}
-                  className="btn-primary"
+                  className="btn-primary text-sm px-3 py-2"
                 >
                   Add Your First Subject
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {subjects.map((subject) => (
                   <SubjectCard
                     key={subject.id}
@@ -228,26 +228,26 @@ export function Dashboard({
         </div>
 
         {/* Compact Sidebar */}
-        <div className="xl:col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-3">
           {/* Quick Actions - More compact */}
-          <div className="card p-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Quick Actions</h3>
+          <div className="card p-3">
+            <h3 className="text-xs font-semibold text-gray-900 dark:text-white mb-2">Quick Actions</h3>
             <QuickActions subjects={subjects} />
           </div>
 
           {/* Upcoming Deadlines - Limited to 3 */}
-          <div className="card p-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Upcoming Deadlines</h3>
+          <div className="card p-3">
+            <h3 className="text-xs font-semibold text-gray-900 dark:text-white mb-2">Upcoming Deadlines</h3>
             <UpcomingDeadlines subjects={subjects.slice(0, 3)} />
           </div>
 
           {/* AI Recommendations - Limited to 2 */}
           {aiInsights?.adaptiveRecommendations && (
-            <div className="card p-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+            <div className="card p-3">
+              <h3 className="text-xs font-semibold text-gray-900 dark:text-white mb-2">
                 AI Recommendations
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {aiInsights.adaptiveRecommendations.slice(0, 2).map((rec: any, index: number) => (
                   <RecommendationCard key={index} recommendation={rec} />
                 ))}
@@ -257,17 +257,17 @@ export function Dashboard({
 
           {/* Study Techniques - More compact */}
           {aiInsights?.studyTechniqueSuggestions && (
-            <div className="card p-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+            <div className="card p-3">
+              <h3 className="text-xs font-semibold text-gray-900 dark:text-white mb-2">
                 Study Tips
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {aiInsights.studyTechniqueSuggestions.slice(0, 2).map((suggestion: any, index: number) => (
                   <div key={index} className="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-                    <h4 className="text-sm font-medium text-primary-900 dark:text-primary-100 capitalize">
+                    <h4 className="text-xs font-medium text-primary-900 dark:text-primary-100 capitalize">
                       {suggestion.technique.replace('-', ' ')}
                     </h4>
-                    <p className="text-xs text-primary-700 dark:text-primary-300 mt-1">
+                    <p className="text-xs text-primary-700 dark:text-primary-300 mt-1 line-clamp-2">
                       {suggestion.reasoning}
                     </p>
                   </div>
@@ -278,14 +278,14 @@ export function Dashboard({
 
           {/* Today's Schedule Preview - Compact */}
           {aiInsights?.recommendedSchedule && (
-            <div className="card p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <Calendar className="h-4 w-4 text-primary-600" />
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="card p-3">
+              <div className="flex items-center space-x-2 mb-2">
+                <Calendar className="h-3 w-3 text-primary-600" />
+                <h3 className="text-xs font-semibold text-gray-900 dark:text-white">
                   Today's Schedule
                 </h3>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {aiInsights.recommendedSchedule.schedule
                   .filter((session: any) => {
                     const today = new Date().toDateString();
@@ -294,19 +294,19 @@ export function Dashboard({
                   .slice(0, 2)
                   .map((session: any, index: number) => (
                     <div key={index} className="flex items-center justify-between py-1 text-xs">
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 dark:text-white truncate">
                           {subjects.find(s => s.id === session.subjectId)?.name || 'Unknown'}
                         </p>
-                        <p className="text-gray-500 dark:text-gray-400">
+                        <p className="text-gray-500 dark:text-gray-400 truncate">
                           {session.technique.replace('-', ' ')}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900 dark:text-white">
+                      <div className="text-right ml-2">
+                        <p className="font-medium text-gray-900 dark:text-white text-xs">
                           {session.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
-                        <p className="text-gray-500 dark:text-gray-400">
+                        <p className="text-gray-500 dark:text-gray-400 text-xs">
                           {session.duration}m
                         </p>
                       </div>
