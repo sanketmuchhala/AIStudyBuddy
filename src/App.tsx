@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Calendar, Target, BarChart3, MessageSquare, Settings, Sun, Moon } from 'lucide-react';
+import { Brain, Calendar, Target, BarChart3, MessageSquare, Settings, Sun, Moon, Bot, Sparkles } from 'lucide-react';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { SmartScheduler } from './components/SmartScheduler/SmartScheduler';
 import { StudyTimer } from './components/StudyTimer/StudyTimer';
 import { InterviewCoach } from './components/InterviewCoach/InterviewCoach';
 import { Analytics } from './components/Analytics/Analytics';
 import { SettingsPanel } from './components/Settings/SettingsPanel';
+import { AIChat } from './components/AIChat/AIChat';
+import { AIStudyAssistant } from './components/AIStudyAssistant/AIStudyAssistant';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useNotifications } from './hooks/useNotifications';
 import { Subject, StudySession, UserPreferences } from './types';
+import { aiService } from './services/aiService';
 
 // Default preferences
 const defaultPreferences: UserPreferences = {
@@ -41,6 +44,21 @@ function App() {
   const [sessions, setSessions] = useLocalStorage<StudySession[]>('sessions', []);
   const [preferences, setPreferences] = useLocalStorage<UserPreferences>('preferences', defaultPreferences);
   const [darkMode, setDarkMode] = useState(preferences.darkMode);
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [showAIStudyAssistant, setShowAIStudyAssistant] = useState(false);
+
+  // Close AI components when escape key is pressed
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAIChat(false);
+        setShowAIStudyAssistant(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
 
   const { requestPermission, showNotification } = useNotifications();
 
@@ -109,6 +127,13 @@ function App() {
     { id: 'settings', label: 'Settings', icon: Settings }
   ] as const;
 
+  const handleTabChange = (tabId: TabType) => {
+    setActiveTab(tabId);
+    // Close AI components when switching tabs
+    setShowAIChat(false);
+    setShowAIStudyAssistant(false);
+  };
+
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -176,18 +201,42 @@ function App() {
               </div>
               <div>
                 <h1 className="text-xl font-bold gradient-text">Smart AI Study Planner</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Intelligent Learning Assistant</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Powered by AI • Enhanced Learning</p>
               </div>
             </div>
 
-            {/* Theme Toggle */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
-              aria-label="Toggle dark mode"
-            >
-              {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
+            {/* AI Features */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowAIStudyAssistant(true)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  showAIStudyAssistant 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
+                }`}
+              >
+                <Sparkles className="h-4 w-4" />
+                <span className="text-sm font-medium">AI Assistant</span>
+              </button>
+              <button
+                onClick={() => setShowAIChat(true)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                  showAIChat 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                <Bot className="h-4 w-4" />
+                <span className="text-sm font-medium">AI Chat</span>
+              </button>
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+                aria-label="Toggle dark mode"
+              >
+                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -203,7 +252,7 @@ function App() {
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id as TabType)}
+                      onClick={() => handleTabChange(tab.id as TabType)}
                       className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors duration-200 ${
                         activeTab === tab.id
                           ? 'bg-primary-600 text-white'
@@ -248,6 +297,32 @@ function App() {
           </main>
         </div>
       </div>
+
+      {/* AI Components - Only render when open */}
+      {showAIChat && (
+        <AIChat
+          isOpen={showAIChat}
+          onClose={() => setShowAIChat(false)}
+        />
+      )}
+      
+      {showAIStudyAssistant && (
+        <AIStudyAssistant
+          subjects={subjects.map(s => s.name)}
+          onClose={() => setShowAIStudyAssistant(false)}
+        />
+      )}
+
+      {/* Backdrop for AI components */}
+      {(showAIChat || showAIStudyAssistant) && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => {
+            setShowAIChat(false);
+            setShowAIStudyAssistant(false);
+          }}
+        />
+      )}
     </div>
   );
 }
