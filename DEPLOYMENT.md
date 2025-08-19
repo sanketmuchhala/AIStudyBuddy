@@ -1,67 +1,159 @@
-# AI Chat Deployment Guide
+# Deployment Guide 🚀
 
-## Quick Setup
+This guide covers deploying AIStudyBuddy to Railway, including environment setup, CI/CD configuration, and troubleshooting.
 
-### 1. Backend Deployment (Railway)
+## 📋 Prerequisites
 
-1. **Get Google Gemini API Key:**
-   - Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
-   - Create new API key
+- Node.js 18 or higher
+- Git repository on GitHub
+- Railway account ([railway.app](https://railway.app))
+- Optional: OpenAI API key for full AI functionality
 
-2. **Deploy to Railway:**
-   ```bash
-   cd ai-chat-backend
-   npm install -g @railway/cli
-   railway login
-   railway init
-   railway variables set GOOGLE_API_KEY="your-gemini-api-key"
-   railway variables set ALLOWED_ORIGIN="https://sanketmuchhala.github.io"
-   railway up
+## 🛤️ Railway Deployment
+
+### Quick Deploy (Recommended)
+
+1. **Fork this repository** to your GitHub account
+
+2. **Deploy to Railway** with one click:
+   [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/yourusername/AIStudyBuddy)
+
+3. **Configure environment variables** in Railway dashboard:
+   ```env
+   NODE_ENV=production
+   PROVIDER=openai
+   OPENAI_API_KEY=your_openai_api_key_here
    ```
 
-3. **Get your backend URL:**
-   ```bash
-   railway status
-   ```
-   Save this URL (e.g., `https://your-app-xyz.railway.app`)
+4. **Deploy**: Railway will automatically build and deploy your application
 
-### 2. Frontend Configuration
+### Manual Railway Setup
 
-1. **Update API URL in frontend:**
-   - Edit `ai-chat/app.js` line 5:
-   ```javascript
-   this.API_BASE = 'https://your-app-xyz.railway.app';
-   ```
+#### Step 1: Create Railway Project
 
-2. **Deploy to GitHub Pages:**
-   - Create new repository: `sanketmuchhala/ai-chat` 
-   - Push `ai-chat/` folder contents to main branch
-   - Enable GitHub Pages in repository settings
-
-### 3. Test Your Deployment
-
-Visit your GitHub Pages URL and test:
-- Model selection works
-- Messages send and receive responses
-- Settings panel functions correctly
-
-## Optional Security Enhancements
-
-### Add Bearer Token Authentication:
 ```bash
-railway variables set API_AUTH_TOKEN="your-secret-token"
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login to Railway
+railway login
+
+# Create new project
+railway init
+
+# Link to existing project (if you have one)
+railway link [project-id]
 ```
-Then configure in frontend settings panel.
 
-### Add Cloudflare Turnstile:
-1. Get site key from Cloudflare
-2. Set in Railway: `railway variables set TURNSTILE_SECRET="your-secret"`
-3. Update frontend `TURNSTILE_SITE_KEY` in `app.js`
+#### Step 2: Configure Environment Variables
 
-## Troubleshooting
+In Railway dashboard or via CLI:
 
-- **CORS errors**: Verify `ALLOWED_ORIGIN` matches your GitHub Pages URL exactly
-- **API errors**: Check Railway logs: `railway logs`
-- **Connection issues**: Test backend health: `curl https://your-app.railway.app/health`
+```bash
+# Required variables
+railway variables set NODE_ENV=production
+railway variables set PROVIDER=openai
+railway variables set OPENAI_API_KEY=your_key_here
 
-Your AI chat is now ready! 🚀
+# Optional variables
+railway variables set PORT=8080
+```
+
+#### Step 3: Deploy
+
+```bash
+# Deploy current branch
+railway up
+
+# Deploy specific service
+railway up --service=your-service-id
+```
+
+## 🔧 Environment Configuration
+
+### Required Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `NODE_ENV` | Environment mode | Yes | `development` |
+| `PORT` | Server port | No | `8080` |
+| `PROVIDER` | AI provider (`openai` or `mock`) | Yes | `mock` |
+| `OPENAI_API_KEY` | OpenAI API key | Only if `PROVIDER=openai` | - |
+
+## 🐳 Docker Deployment
+
+### Building the Image
+
+```bash
+# Build production image
+docker build -t aistudybuddy:latest .
+
+# Run with environment variables
+docker run -p 8080:8080 \
+  -e NODE_ENV=production \
+  -e PROVIDER=openai \
+  -e OPENAI_API_KEY=your_key \
+  aistudybuddy:latest
+```
+
+## 🔄 CI/CD Pipeline
+
+The repository includes a CI/CD pipeline that:
+
+1. **Tests** code on multiple Node.js versions
+2. **Builds** Docker image for validation
+3. **Deploys** to Railway on main branch pushes
+
+#### Required GitHub Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `RAILWAY_TOKEN` | Railway authentication token |
+| `RAILWAY_SERVICE_ID` | Your Railway service ID |
+
+## 🔍 Health Checks & Monitoring
+
+### Health Check Endpoint
+
+```http
+GET /api/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-08-19T12:00:00.000Z",
+  "uptime": 3600,
+  "services": {
+    "ai": "available"
+  }
+}
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Build Failures**: Clear node_modules and reinstall
+2. **API Errors**: Check environment variables and API keys
+3. **Frontend Loading Issues**: Verify static files are built properly
+
+### Debug Mode
+
+```env
+NODE_ENV=development
+LOG_LEVEL=debug
+```
+
+View logs:
+```bash
+railway logs --follow
+```
+
+## 📞 Support
+
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/AIStudyBuddy/issues)
+- 📧 Email: support@aistudybuddy.com
+
+**Happy Deploying! 🚀**

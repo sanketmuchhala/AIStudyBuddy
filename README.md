@@ -1,8 +1,8 @@
-# Smart AI Study Planner
+# AIStudyBuddy 🧠
 
-> Intelligent learning assistant powered by advanced algorithms
+A modern, AI-powered study companion built with React, TypeScript, and Express. Get personalized study assistance, generate flashcards, create study plans, and chat with AI to enhance your learning experience.
 
-A production-ready React TypeScript application that uses real AI algorithms to optimize study schedules, provide adaptive learning recommendations, and enhance interview preparation through intelligent coaching.
+**🚀 Live Demo**: [Deploy to Railway](https://railway.app) | **📚 Documentation**: [Full API Docs](#-api-documentation)
 
 ## System Architecture
 
