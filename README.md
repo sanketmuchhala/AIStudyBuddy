@@ -122,61 +122,50 @@ function predictSubjectCompletion(subjects, sessions, productivityPattern) {
 }
 ```
 
-## Getting Started
+## Local Development
 
-### Development
-```bash
-npm install
-npm run dev
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/sanketmuchhala/AIStudyBuddy.git
+    cd AIStudyBuddy
+    ```
 
-### Production Build
-```bash
-npm run build
-npm run preview
-```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-### Backend Setup
-```bash
-cd ai-chat-backend
-cp .env.example .env
-# Edit .env with your Google API key
-npm install
-npm start
-```
+3.  **Set up environment variables:**
+    Create a `.env` file in the root of the project and add the following variables:
+    ```
+    GEMINI_API_KEY=your_gcp_api_key
+    ```
 
-### Deployment Options
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    This will start both the frontend and backend servers concurrently. The frontend will be available at `http://localhost:5173`.
 
-#### Netlify (Recommended)
-```bash
-# Build the project
-npm run build
+## Environment Variables
 
-# Deploy to Netlify
-# Drag and drop the 'dist' folder to netlify.com
-# Or connect your GitHub repository for automatic deployments
-```
+-   `PORT`: The port for the server to listen on (default: `8080`).
+-   `NODE_ENV`: The node environment (`development` or `production`).
+-   `GEMINI_API_KEY` or `GOOGLE_API_KEY`: Your API key for Google Gemini.
+-   `PROVIDER`: The AI provider to use (`gemini` or `mock`). The `mock` provider is useful for local development without an API key.
 
-#### Vercel
-```bash
-# Install Vercel CLI
-npm i -g vercel
+## Railway Deployment
 
-# Deploy
-vercel --prod
-```
+This project is configured for deployment on Railway. The `railway.json` file in the root of the project defines the build and deploy commands.
 
-#### GitHub Pages
-```bash
-# Install gh-pages
-npm install --save-dev gh-pages
+To deploy your own instance, you can use the "Deploy to Railway" button or connect your forked repository to a new Railway project.
 
-# Add to package.json scripts:
-"deploy": "npm run build && gh-pages -d dist"
+You will need to configure the `GEMINI_API_KEY` or `GOOGLE_API_KEY` environment variable in the Railway project settings.
 
-# Deploy
-npm run deploy
-```
+## Troubleshooting
+
+-   **Build Failures:** Clear `node_modules` and reinstall dependencies.
+-   **API Errors:** Check your environment variables and API keys.
 
 ## Architecture
 

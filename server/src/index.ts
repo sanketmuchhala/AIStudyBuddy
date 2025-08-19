@@ -62,20 +62,21 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestLogger);
 
 // API Routes
-app.use('/api/health', healthRoutes);
+app.use('/healthz', healthRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/quick', quickActionsRoutes);
 
 // Serve static files in production
-if (NODE_ENV === 'production') {
+if (NODE_ENV === 'production' || process.env.SERVE_STATIC) {
   const clientPath = path.join(__dirname, '../../client/dist');
   app.use(express.static(clientPath));
-  
+
   // SPA fallback
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(clientPath, 'index.html'));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/healthz')) {
+      return next();
     }
+    res.sendFile(path.join(clientPath, 'index.html'));
   });
 }
 

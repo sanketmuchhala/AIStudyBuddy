@@ -1,121 +1,26 @@
-# AIStudyBuddy Codebase Audit
+# AUDIT.md
 
-## Current Architecture Analysis
+This document outlines the audit of the AIStudyBuddy repository and the plan to refactor it for a single, Dockerized deployment on Railway.
 
-### Project Structure
-```
-/
-├── Root Level: Mixed frontend/backend files
-├── ai-chat-backend/: Separate Express.js backend with database
-├── ai-chat/: Simple HTML/JS chat interface
-├── src/: Main React TypeScript frontend
-└── GitHub workflows for Pages deployment
-```
+## Current State & Issues
 
-### Technology Stack
+1.  **Deployment:** The `README.md` provides deployment instructions for Netlify, Vercel, and GitHub Pages. These are now obsolete and will be removed. The `DEPLOYMENT.md` is for Railway but needs updates. There are also shell scripts for deployment (`deploy.sh`, `deploy-railway.sh`) that will be replaced by the `railway.json` configuration.
+2.  **CORS:** The frontend and backend are separate projects (`client` and `server`), which will lead to CORS issues if not handled. The plan is to serve the frontend as static files from the Express server to eliminate CORS problems in production.
+3.  **Backend:** The backend is in the `server` directory. It needs to be refactored to align with the new API structure, including a `/healthz` endpoint, streaming chat, and quick action endpoints.
+4.  **Environment Variables:** The environment variable handling is inconsistent. `DEPLOYMENT.md` mentions `OPENAI_API_KEY`, but the new implementation will use `GEMINI_API_KEY` or `GOOGLE_API_KEY`. A `PROVIDER` environment variable will be used to switch between `gemini` and a `mock` provider. A `.env.example` file needs to be created at the root level.
+5.  **Scripts:** The `package.json` files in `client` and `server` have their own scripts. Root-level scripts for concurrent development, building, and starting the application are missing.
+6.  **Docker:** A `Dockerfile` exists, but it needs to be reviewed and updated to a multi-stage build that handles both the frontend and backend.
+7.  **CI/CD:** A GitHub Actions workflow exists in `.github/workflows/ci.yml`. It will be updated to run tests, build the Docker image, and optionally deploy to Railway.
+8.  **Frontend:** The frontend needs to be updated to communicate with the new API endpoints on the same origin. The API calls need to be updated to use the new endpoints.
 
-**Frontend (Root + /src)**
-- **Framework**: Vite + React 18 + TypeScript
-- **Styling**: Tailwind CSS (already configured)
-- **State**: React hooks + localStorage persistence
-- **Components**: Custom components, uses Lucide icons
-- **Build**: Already using Vite with TypeScript
+## Plan
 
-**Backend (/ai-chat-backend)**
-- **Framework**: Express.js with Node.js
-- **Database**: PostgreSQL with pg driver
-- **AI**: Google Gemini API integration
-- **Security**: CORS, rate limiting, basic input validation
-- **Deployment**: Railway.json already present
+The plan is to execute the following steps as outlined in the prompt:
 
-### Current Issues Identified
-
-#### 1. Architecture Problems
-- **Split deployment**: Frontend (GitHub Pages) + Backend (Railway) = CORS issues
-- **Multiple entry points**: Root index.html, ai-chat folder, main React app
-- **Inconsistent structure**: Mixed concerns in root directory
-
-#### 2. GitHub Pages Artifacts
-- **Deploy workflow**: `.github/workflows/deploy.yml` and `pages.yml`
-- **Vite config**: Hard-coded base path `/AIStudyBuddy/` for GitHub Pages
-- **Package.json**: `gh-pages` deploy script
-- **Build configuration**: Assumes static hosting with base path
-
-#### 3. API Integration Issues
-- **CORS dependency**: Frontend and backend on different origins
-- **Environment handling**: Hardcoded URLs likely causing failures
-- **AI service**: `src/services/aiService.ts` probably pointing to wrong endpoints
-
-#### 4. UI/UX Concerns
-- **Forced dark mode**: Code shows `setDarkMode(true)` with forced styling
-- **Accessibility**: Limited ARIA labels, focus management
-- **Responsive**: Basic responsive design, could be improved
-- **Performance**: No code splitting or optimization visible
-
-#### 5. Configuration
-- **Environment**: No `.env.example` in root
-- **Development**: No unified dev setup for full-stack
-- **Build**: Multiple separate build processes
-
-### Existing Strengths
-- **TypeScript**: Well-typed React frontend
-- **Tailwind**: Already configured for styling
-- **Component Architecture**: Good separation of concerns in React components
-- **Persistence**: LocalStorage for client-side state
-- **Backend Structure**: Express backend has good basic structure
-- **AI Integration**: Google Gemini already integrated in backend
-
-## Migration Strategy
-
-### 1. Restructure to Single Origin
-- Consolidate to `/client` (frontend) + `/server` (backend)
-- Single Docker deployment serving both from Express
-- Remove GitHub Pages dependencies
-
-### 2. Frontend Modernization
-- Keep Vite + React + TypeScript (working well)
-- Add shadcn/ui for consistent components
-- Implement proper dark/light theme system
-- Add TanStack Query for API state management
-- Improve accessibility and performance
-
-### 3. Backend Enhancement
-- Enhance existing Express backend
-- Add proper error handling and logging
-- Implement health checks and monitoring
-- Serve static frontend files
-
-### 4. Development Experience
-- Unified dev environment with concurrently
-- Proper environment configuration
-- CI/CD pipeline for Railway deployment
-
-## Risk Assessment
-
-**Low Risk**
-- TypeScript/React codebase is solid foundation
-- Tailwind already configured
-- Backend has good basic structure
-
-**Medium Risk**
-- Need to migrate away from GitHub Pages hosting
-- CORS issues need resolution through architecture change
-- AI API integration needs environment fixes
-
-**High Risk**
-- Multiple deployment targets need consolidation
-- Development workflow needs complete overhaul
-
-## Estimated Effort
-- **Phase 1**: Cleanup and restructure (2-3 hours)
-- **Phase 2**: Frontend enhancement (4-5 hours)
-- **Phase 3**: Backend integration (2-3 hours)
-- **Phase 4**: Deployment and testing (2-3 hours)
-- **Total**: ~12-14 hours for complete revamp
-
-## Next Steps
-1. Remove GitHub Pages artifacts
-2. Restructure to client/server layout
-3. Fix CORS by single-origin deployment
-4. Enhance UI with modern patterns
-5. Add comprehensive testing and CI/CD
+- **A) Server Refactoring:** Refactor the Express server to serve the static frontend, provide the specified API endpoints, and handle errors and logging.
+- **B) Frontend Refactoring:** Update the Vite/React frontend to communicate with the new same-origin API endpoints.
+- **C) Config & Scripts:** Create root-level `package.json` scripts and a `.env.example` file.
+- **D) Dockerization:** Create a new multi-stage `Dockerfile`.
+- **E) Railway Configuration:** Create a `railway.json` file for deployment.
+- **F) Testing & CI:** Add Vitest and Playwright tests and update the GitHub Actions workflow.
+- **G) Polishing:** Improve the README, add a CHANGELOG, and address any remaining issues.

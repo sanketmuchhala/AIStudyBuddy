@@ -1,60 +1,32 @@
-# Multi-stage Dockerfile for Railway deployment
-# Stage 1: Build client
-FROM node:18-alpine as client-builder
-
-WORKDIR /app/client
-
-# Copy client package files
-COPY client/package*.json ./
-RUN npm ci --only=production
-
-# Copy client source and build
-COPY client/ ./
-RUN npm run build
-
-# Stage 2: Build server
-FROM node:18-alpine as server-builder
-
-WORKDIR /app/server
-
-# Copy server package files
-COPY server/package*.json ./
-RUN npm ci --only=production
-
-# Copy server source and build
-COPY server/ ./
-RUN npm run build
-
-# Stage 3: Production image
-FROM node:18-alpine
-
+# Stage 1: Build
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install production dependencies for server
-COPY server/package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+# Copy all package.json and package-lock.json files
+COPY package.json package-lock.json ./
+COPY client/package.json client/package-lock.json ./client/
+COPY server/package.json server/package-lock.json ./server/
 
-# Copy built server
-COPY --from=server-builder /app/server/dist ./dist
+# Install dependencies
+RUN npm install
 
-# Copy built client
-COPY --from=client-builder /app/client/dist ./client/dist
+# Copy the rest of the source code
+COPY . .
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+# Build client and server
+RUN npm run build
 
-# Change ownership
-RUN chown -R nextjs:nodejs /app
+# Stage 2: Production
+FROM node:20-alpine
+WORKDIR /app
 
-USER nextjs
+# Copy necessary files from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/client/dist ./client/dist
 
-# Expose port
+ENV PORT=8080
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:8080/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
-
-# Start the application
-CMD ["node", "dist/index.js"]
+CMD ["npm", "start"]

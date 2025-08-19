@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+import { config } from '../config';
+
+const API_BASE_URL = config.apiBaseUrl;
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -57,7 +59,7 @@ class ApiClient {
       environment: string;
       uptime: number;
       services: Record<string, string>;
-    }>('/health');
+    }>('/healthz');
   }
 
   // Chat endpoints
@@ -66,7 +68,7 @@ class ApiClient {
       message: string;
       conversationId: string;
       timestamp: string;
-    }>>('/chat', {
+    }>>('/api/chat', {
       method: 'POST',
       body: JSON.stringify({ message, conversationId }),
     });
@@ -79,7 +81,7 @@ class ApiClient {
       originalLength: number;
       type: string;
       timestamp: string;
-    }>>('/quick/summarize', {
+    }>>('/api/quick/summarize', {
       method: 'POST',
       body: JSON.stringify({ content, type }),
     });
@@ -96,7 +98,7 @@ class ApiClient {
       duration: number;
       level: string;
       timestamp: string;
-    }>>('/quick/study-plan', {
+    }>>('/api/quick/study-plan', {
       method: 'POST',
       body: JSON.stringify({ topic, duration, level }),
     });
@@ -107,7 +109,7 @@ class ApiClient {
       flashcards: string;
       count: number;
       timestamp: string;
-    }>>('/quick/flashcards', {
+    }>>('/api/quick/flashcards', {
       method: 'POST',
       body: JSON.stringify({ content, count }),
     });
@@ -122,7 +124,7 @@ class ApiClient {
       topic: string;
       level: string;
       timestamp: string;
-    }>>('/quick/explain', {
+    }>>('/api/quick/explain', {
       method: 'POST',
       body: JSON.stringify({ topic, level }),
     });
@@ -139,7 +141,7 @@ class ApiClient {
       questionCount: number;
       difficulty: string;
       timestamp: string;
-    }>>('/quick/quiz', {
+    }>>('/api/quick/quiz', {
       method: 'POST',
       body: JSON.stringify({ topic, questionCount, difficulty }),
     });
@@ -150,14 +152,14 @@ class ApiClient {
     const params = new URLSearchParams();
     if (conversationId) params.set('conversationId', conversationId);
     
-    const url = `${this.baseUrl}/chat/stream?${params}`;
+    const url = `${this.baseUrl}/api/chat/stream?${params}`;
     
     const eventSource = new EventSource(url, {
       withCredentials: true,
     });
 
     // Send the message via POST after creating the connection
-    fetch(`${this.baseUrl}/chat/stream`, {
+    fetch(`${this.baseUrl}/api/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
