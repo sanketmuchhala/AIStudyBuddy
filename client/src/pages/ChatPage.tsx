@@ -1,246 +1,523 @@
 import { useState, useRef, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Send, Loader2, Copy, Check } from 'lucide-react';
+import { Send, StopCircle, RotateCcw, Copy, Trash2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { apiClient, ApiError } from '@/lib/api';
 import { useToast } from '@/hooks/useToast';
-import { apiClient } from '@/lib/api';
-import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useTheme } from '@/components/ui/theme-provider';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  streaming?: boolean;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  lastUpdated: Date;
 }
 
 export function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
-  const [conversationId] = useState(() => `conv_${Date.now()}`);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [streamAbort, setStreamAbort] = useState<(() => void) | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const { theme } = useTheme();
+
+  // Load conversations from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('aistudybuddy-conversations');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const conversations = parsed.map((conv: any) => ({
+          ...conv,
+          messages: conv.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          })),
+          lastUpdated: new Date(conv.lastUpdated)
+        }));
+        setConversations(conversations);
+        
+        if (conversations.length > 0 && !activeConversationId) {
+          setActiveConversationId(conversations[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to load conversations:', error);
+      }
+    }
+  }, [activeConversationId]);
+
+  // Save conversations to localStorage whenever they change
+  useEffect(() => {
+    if (conversations.length > 0) {
+      localStorage.setItem('aistudybuddy-conversations', JSON.stringify(conversations));
+    }
+  }, [conversations]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    scrollToBottom();
+  }, [conversations, streamingMessageId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const sendMessage = useMutation({
-    mutationFn: async (message: string) => {
-      const response = await apiClient.sendMessage(message, conversationId);
-      return response;
-    },
-    onMutate: async (message) => {
-      // Add user message immediately
-      const userMessage: Message = {
-        id: `msg_${Date.now()}`,
-        role: 'user',
-        content: message,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, userMessage]);
-      setInput('');
-    },
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        const assistantMessage: Message = {
-          id: `msg_${Date.now()}_assistant`,
-          role: 'assistant',
-          content: response.data.message,
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to send message. Please try again.',
-        variant: 'destructive',
-      });
-      
-      // Remove the user message that failed
-      setMessages(prev => prev.slice(0, -1));
-      setInput(''); // Reset input
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || sendMessage.isPending) return;
+  const createNewConversation = () => {
+    const newConversation: Conversation = {
+      id: Date.now().toString(),
+      title: 'New Conversation',
+      messages: [],
+      lastUpdated: new Date(),
+    };
     
-    sendMessage.mutate(input.trim());
+    setConversations(prev => [newConversation, ...prev]);
+    setActiveConversationId(newConversation.id);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+  const deleteConversation = (conversationId: string) => {
+    setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+    if (activeConversationId === conversationId) {
+      const remaining = conversations.filter(conv => conv.id !== conversationId);
+      setActiveConversationId(remaining.length > 0 ? remaining[0].id : null);
     }
   };
 
-  const copyToClipboard = async (text: string, messageId: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedId(messageId);
-      setTimeout(() => setCopiedId(null), 2000);
-      toast({
-        title: 'Copied!',
-        description: 'Message copied to clipboard',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to copy message',
-        variant: 'destructive',
-      });
+  const addMessage = (conversationId: string, message: Omit<Message, 'id'>) => {
+    const messageWithId = {
+      ...message,
+      id: Date.now().toString(),
+    };
+
+    setConversations(prev =>
+      prev.map(conv =>
+        conv.id === conversationId
+          ? {
+              ...conv,
+              messages: [...conv.messages, messageWithId],
+              lastUpdated: new Date(),
+              title: conv.messages.length === 0 ? message.content.slice(0, 50) + (message.content.length > 50 ? '...' : '') : conv.title
+            }
+          : conv
+      )
+    );
+
+    return messageWithId.id;
+  };
+
+  const updateMessage = (conversationId: string, messageId: string, content: string) => {
+    setConversations(prev =>
+      prev.map(conv =>
+        conv.id === conversationId
+          ? {
+              ...conv,
+              messages: conv.messages.map(msg =>
+                msg.id === messageId ? { ...msg, content, streaming: false } : msg
+              ),
+              lastUpdated: new Date()
+            }
+          : conv
+      )
+    );
+  };
+
+  const removeMessage = (conversationId: string, messageId: string) => {
+    setConversations(prev =>
+      prev.map(conv =>
+        conv.id === conversationId
+          ? {
+              ...conv,
+              messages: conv.messages.filter(msg => msg.id !== messageId)
+            }
+          : conv
+      )
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!input.trim() || isStreaming) return;
+
+    let conversationId = activeConversationId;
+    
+    // Create new conversation if none exists
+    if (!conversationId) {
+      const newConversation: Conversation = {
+        id: Date.now().toString(),
+        title: input.slice(0, 50) + (input.length > 50 ? '...' : ''),
+        messages: [],
+        lastUpdated: new Date(),
+      };
+      
+      setConversations(prev => [newConversation, ...prev]);
+      conversationId = newConversation.id;
+      setActiveConversationId(conversationId);
+    }
+
+    // Add user message
+    const userMessage = {
+      role: 'user' as const,
+      content: input.trim(),
+      timestamp: new Date(),
+    };
+    addMessage(conversationId, userMessage);
+
+    // Add assistant message placeholder
+    const assistantMessageId = addMessage(conversationId, {
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      streaming: true,
+    });
+
+    setInput('');
+    setIsStreaming(true);
+    setStreamingMessageId(assistantMessageId);
+
+    // Start streaming
+    let fullContent = '';
+    const { abort } = apiClient.createChatStream(
+      input.trim(),
+      conversationId,
+      (chunk) => {
+        fullContent += chunk;
+        updateMessage(conversationId!, assistantMessageId, fullContent);
+      },
+      (error: ApiError) => {
+        setIsStreaming(false);
+        setStreamingMessageId(null);
+        setStreamAbort(null);
+        
+        updateMessage(conversationId!, assistantMessageId, 
+          `Error: ${error.message}. Please try again.`
+        );
+        
+        toast({
+          title: 'Chat Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      },
+      () => {
+        setIsStreaming(false);
+        setStreamingMessageId(null);
+        setStreamAbort(null);
+        
+        // Mark message as complete
+        setConversations(prev =>
+          prev.map(conv =>
+            conv.id === conversationId
+              ? {
+                  ...conv,
+                  messages: conv.messages.map(msg =>
+                    msg.id === assistantMessageId ? { ...msg, streaming: false } : msg
+                  )
+                }
+              : conv
+          )
+        );
+      }
+    );
+
+    setStreamAbort(() => abort);
+  };
+
+  const stopStreaming = () => {
+    if (streamAbort) {
+      streamAbort();
+      setIsStreaming(false);
+      setStreamingMessageId(null);
+      setStreamAbort(null);
     }
   };
 
-  const formatMessage = (content: string) => {
-    // Simple markdown-like formatting
-    return content
-      .split('\n')
-      .map((line, index) => (
-        <span key={index}>
-          {line}
-          {index < content.split('\n').length - 1 && <br />}
-        </span>
-      ));
+  const retryLastMessage = () => {
+    const activeConversation = conversations.find(conv => conv.id === activeConversationId);
+    if (!activeConversation || activeConversation.messages.length < 2) return;
+
+    const lastUserMessage = [...activeConversation.messages]
+      .reverse()
+      .find(msg => msg.role === 'user');
+
+    if (lastUserMessage) {
+      setInput(lastUserMessage.content);
+      // Remove the last assistant message if it exists
+      const lastMessage = activeConversation.messages[activeConversation.messages.length - 1];
+      if (lastMessage.role === 'assistant') {
+        removeMessage(activeConversationId!, lastMessage.id);
+      }
+    }
   };
+
+  const copyMessage = (content: string) => {
+    navigator.clipboard.writeText(content);
+    toast({
+      title: 'Copied!',
+      description: 'Message copied to clipboard.',
+    });
+  };
+
+  const activeConversation = conversations.find(conv => conv.id === activeConversationId);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">AI Chat Assistant</h1>
-        <p className="text-muted-foreground">
-          Get instant help with your studies. Ask questions, seek explanations, or discuss any topic.
-        </p>
+    <div className="h-[calc(100vh-8rem)] flex gap-6">
+      {/* Conversations Sidebar */}
+      <div className="w-80 flex flex-col space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Conversations</h2>
+          <Button onClick={createNewConversation} size="sm">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            New
+          </Button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-2">
+          {conversations.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No conversations yet.</p>
+              <p className="text-sm">Start chatting to create one!</p>
+            </div>
+          ) : (
+            conversations.map((conversation) => (
+              <Card
+                key={conversation.id}
+                className={`cursor-pointer transition-all hover:shadow-md group ${
+                  activeConversationId === conversation.id ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => setActiveConversationId(conversation.id)}
+              >
+                <CardContent className="p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm line-clamp-2 mb-1">
+                        {conversation.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {conversation.messages.length} messages
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {conversation.lastUpdated.toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteConversation(conversation.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
 
-      <Card className="h-[600px] flex flex-col">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Conversation</CardTitle>
-        </CardHeader>
-        
-        <CardContent className="flex-1 flex flex-col space-y-4 overflow-hidden">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-            {messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                <p>Start a conversation by typing a message below.</p>
-                <p className="text-sm mt-2">
-                  Try asking: "Explain photosynthesis" or "Help me create a study schedule"
-                </p>
-              </div>
-            )}
-            
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={cn(
-                  'flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm',
-                  message.role === 'user'
-                    ? 'ml-auto bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">{formatMessage(message.content)}</div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => copyToClipboard(message.content, message.id)}
-                  >
-                    {copiedId === message.id ? (
-                      <Check className="h-3 w-3" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
-                  </Button>
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {activeConversation ? (
+          <>
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/30 rounded-t-lg">
+              {activeConversation.messages.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-semibold mb-2">Start a conversation</h3>
+                  <p className="text-sm">Ask me anything about your studies!</p>
                 </div>
-                <div className="text-xs opacity-70">
-                  {message.timestamp.toLocaleTimeString()}
-                </div>
-              </div>
-            ))}
-            
-            {sendMessage.isPending && (
-              <div className="flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm bg-muted">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>AI is thinking...</span>
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input */}
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message... (Shift+Enter for new line)"
-              className="flex-1 min-h-[60px] max-h-[120px] px-3 py-2 border border-input bg-background rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-              disabled={sendMessage.isPending}
-            />
-            <Button 
-              type="submit" 
-              size="icon"
-              disabled={!input.trim() || sendMessage.isPending}
-              className="shrink-0"
-            >
-              {sendMessage.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                activeConversation.messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex group ${
+                      message.role === 'user' ? 'justify-end' : 'justify-start'
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-lg p-4 ${
+                        message.role === 'user'
+                          ? 'bg-primary text-primary-foreground ml-8'
+                          : 'bg-background border mr-8'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          {message.role === 'assistant' ? (
+                            <div className="prose prose-sm max-w-none dark:prose-invert">
+                              <ReactMarkdown
+                                components={{
+                                  code({ className, children, ...props }: any) {
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    const isInline = !className?.includes('language-');
+                                    
+                                    return !isInline && match ? (
+                                      <SyntaxHighlighter
+                                        style={theme === 'dark' ? oneDark as any : oneLight as any}
+                                        language={match[1]}
+                                        PreTag="div"
+                                      >
+                                        {String(children).replace(/\n$/, '')}
+                                      </SyntaxHighlighter>
+                                    ) : (
+                                      <code className={className} {...props}>
+                                        {children}
+                                      </code>
+                                    );
+                                  },
+                                }}
+                              >
+                                {message.content}
+                              </ReactMarkdown>
+                              {message.streaming && (
+                                <div className="mt-2">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                                    <span className="text-xs text-muted-foreground">AI is typing...</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="whitespace-pre-wrap">{message.content}</div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center space-x-1 ml-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyMessage(message.content)}
+                            className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {message.role}
+                        </Badge>
+                        <span className="text-xs opacity-60">
+                          {message.timestamp.toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
               )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Quick Suggestions */}
-      {messages.length === 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Quick Suggestions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 md:grid-cols-2">
-              {[
-                'Explain the water cycle in simple terms',
-                'Help me create a study schedule for finals',
-                'What are the key principles of machine learning?',
-                'How do I solve quadratic equations?',
-              ].map((suggestion) => (
-                <Button
-                  key={suggestion}
-                  variant="outline"
-                  className="justify-start text-left h-auto py-3 px-4"
-                  onClick={() => {
-                    setInput(suggestion);
-                    inputRef.current?.focus();
-                  }}
-                >
-                  {suggestion}
-                </Button>
-              ))}
+              
+              {isStreaming && (
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] bg-background border rounded-lg p-4 mr-8">
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
             </div>
-          </CardContent>
-        </Card>
-      )}
+
+            {/* Input Area */}
+            <div className="border-t bg-background p-4">
+              <form onSubmit={handleSubmit} className="flex items-end space-x-2">
+                <div className="flex-1">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask me anything about your studies..."
+                    disabled={isStreaming}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                        handleSubmit(e);
+                      }
+                    }}
+                    className="min-h-[44px]"
+                  />
+                  <div className="text-xs text-muted-foreground mt-1 px-1">
+                    Press Ctrl+Enter to send
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  {isStreaming ? (
+                    <Button
+                      type="button"
+                      onClick={stopStreaming}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <StopCircle className="h-4 w-4 mr-2" />
+                      Stop
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={retryLastMessage}
+                        variant="outline"
+                        size="sm"
+                        disabled={!activeConversation || activeConversation.messages.length < 2}
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Retry
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={!input.trim() || isStreaming}
+                        size="sm"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Send
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </form>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Welcome to AI Chat</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start a new conversation or select an existing one from the sidebar.
+                </p>
+                <Button onClick={createNewConversation}>
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Start New Conversation
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

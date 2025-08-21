@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# Railway Deployment Script for AI Study Buddy Backend
-# This script helps deploy the backend to Railway
+# AI Study Buddy - Railway Full-Stack Deployment Script
+# This script deploys both frontend and backend to Railway
 
-echo "🚀 Starting Railway deployment for AI Study Buddy Backend..."
+echo "🚀 Starting Railway full-stack deployment for AI Study Buddy..."
 
 # Check if Railway CLI is installed
 if ! command -v railway &> /dev/null; then
     echo "❌ Railway CLI not found. Installing..."
     npm install -g @railway/cli
 fi
-
-# Navigate to backend directory
-cd ai-chat-backend
 
 # Check if we're logged in to Railway
 if ! railway whoami &> /dev/null; then
@@ -26,30 +23,25 @@ if [ ! -f "railway.json" ]; then
     railway init
 fi
 
-# Link to existing project if needed
-echo "🔗 Linking to Railway project..."
-railway link
-
-# Set environment variables
+# Set environment variables for AI functionality
 echo "🔧 Setting up environment variables..."
 
-# Prompt for Google API key
-read -p "Enter your Google Gemini API key: " GOOGLE_API_KEY
-railway variables set GOOGLE_API_KEY="$GOOGLE_API_KEY"
+echo "Setting default AI provider to mock (you can change this later)..."
+railway variables set PROVIDER=mock
+railway variables set NODE_ENV=production
 
-# Set allowed origin (update this with your actual frontend URL)
-read -p "Enter your frontend URL (e.g., https://your-app.vercel.app): " FRONTEND_URL
-railway variables set ALLOWED_ORIGIN="$FRONTEND_URL"
-
-# Optional: Set auth token for security
-read -p "Do you want to set an API auth token? (y/n): " SET_AUTH
-if [ "$SET_AUTH" = "y" ]; then
-    read -p "Enter your API auth token: " API_AUTH_TOKEN
-    railway variables set API_AUTH_TOKEN="$API_AUTH_TOKEN"
-fi
+echo ""
+echo "⚠️  IMPORTANT: Set your AI API keys in Railway dashboard:"
+echo "1. Go to your Railway project dashboard"
+echo "2. Navigate to Variables tab"
+echo "3. Add your API keys:"
+echo "   - GEMINI_API_KEY (for Google Gemini)"
+echo "   - OPENAI_API_KEY (for OpenAI)"
+echo "4. Set PROVIDER to 'gemini' or 'openai' (currently set to 'mock')"
+echo ""
 
 # Deploy the application
-echo "🚀 Deploying to Railway..."
+echo "🚀 Deploying full-stack application to Railway..."
 railway up
 
 # Get the deployment URL
@@ -57,13 +49,15 @@ echo "📋 Getting deployment URL..."
 DEPLOYMENT_URL=$(railway domain)
 
 echo "✅ Deployment complete!"
-echo "🌐 Your backend is available at: $DEPLOYMENT_URL"
+echo "🌐 Your full-stack app is available at: $DEPLOYMENT_URL"
 echo ""
 echo "📝 Next steps:"
-echo "1. Update the API_BASE_URL in src/services/aiService.ts with: $DEPLOYMENT_URL"
-echo "2. Test the health endpoint: $DEPLOYMENT_URL/health"
-echo "3. Deploy your frontend to your preferred platform"
+echo "1. Visit Railway dashboard to set your AI API keys"
+echo "2. Change PROVIDER variable from 'mock' to 'gemini' or 'openai'"
+echo "3. Test the app at: $DEPLOYMENT_URL"
+echo "4. Test health endpoint: $DEPLOYMENT_URL/healthz"
 echo ""
-echo "🔧 To view logs: railway logs"
-echo "🔧 To redeploy: railway up"
-echo "🔧 To open dashboard: railway open"
+echo "🔧 Useful commands:"
+echo "🔧 View logs: railway logs"
+echo "🔧 Redeploy: railway up"
+echo "🔧 Open dashboard: railway open"

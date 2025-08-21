@@ -20,9 +20,9 @@ const features = [
   },
   {
     icon: BookOpen,
-    title: 'Study Planning',
-    description: 'Create personalized 7-day study plans tailored to your goals.',
-    href: '/quick-actions',
+    title: 'Study Tools',
+    description: 'Access flashcards, quizzes, and topic explanations.',
+    href: '/study-tools',
     color: 'text-purple-500',
   },
 ];

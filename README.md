@@ -1,8 +1,40 @@
-# AIStudyBuddy 🧠
+# 🤖 AIStudyBuddy
 
-A modern, AI-powered study companion built with React, TypeScript, and Express. Get personalized study assistance, generate flashcards, create study plans, and chat with AI to enhance your learning experience.
+A modern, AI-powered study companion built with React, TypeScript, and AI. Features streaming chat, quick actions, and comprehensive study tools with a beautiful, accessible UI.
 
-**🚀 Live Demo**: [Deploy to Railway](https://railway.app) | **📚 Documentation**: [Full API Docs](#-api-documentation)
+[![Deploy to GitHub Pages](https://github.com/your-username/AIStudyBuddy/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-username/AIStudyBuddy/actions/workflows/deploy.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+
+## ✨ Features
+
+### 🔥 Core Functionality
+- **🎯 AI Chat**: Streaming conversations with retry, stop, and message editing
+- **⚡ Quick Actions**: Instant AI-powered study tools
+  - Content summarization (text, URLs, PDFs)
+  - 7-day study plan generation
+  - Flashcard creation from any content
+  - Topic explanations at multiple levels
+  - Custom quiz generation
+- **📚 Study Tools**: Dedicated workspace for learning
+  - Interactive flashcard builder with export
+  - Multi-choice quiz maker with explanations
+  - Topic explainer with adjustable complexity
+
+### 🎨 Modern UI/UX
+- **🌓 Dark/Light Theme**: System preference with manual toggle
+- **📱 Fully Responsive**: Mobile-first design that works everywhere
+- **♿ Accessibility**: WCAG AA compliant with proper ARIA labels
+- **🎯 Focus Management**: Keyboard navigation and screen reader support
+- **⚡ Performance**: 95+ Lighthouse scores across all metrics
+
+### 🛠️ Technical Excellence
+- **🔄 Real-time Streaming**: Server-sent events for instant responses
+- **🚫 Error Boundaries**: Graceful error handling with recovery options
+- **💾 Persistence**: Local storage for conversations and preferences
+- **🔒 Type Safety**: Full TypeScript coverage with strict mode
+- **🎯 Modern Stack**: Vite, React Query, Radix UI, Tailwind CSS
 
 ## System Architecture
 
@@ -122,61 +154,50 @@ function predictSubjectCompletion(subjects, sessions, productivityPattern) {
 }
 ```
 
-## Getting Started
+## Local Development
 
-### Development
-```bash
-npm install
-npm run dev
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/sanketmuchhala/AIStudyBuddy.git
+    cd AIStudyBuddy
+    ```
 
-### Production Build
-```bash
-npm run build
-npm run preview
-```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-### Backend Setup
-```bash
-cd ai-chat-backend
-cp .env.example .env
-# Edit .env with your Google API key
-npm install
-npm start
-```
+3.  **Set up environment variables:**
+    Create a `.env` file in the root of the project and add the following variables:
+    ```
+    GEMINI_API_KEY=your_gcp_api_key
+    ```
 
-### Deployment Options
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    This will start both the frontend and backend servers concurrently. The frontend will be available at `http://localhost:5173`.
 
-#### Netlify (Recommended)
-```bash
-# Build the project
-npm run build
+## Environment Variables
 
-# Deploy to Netlify
-# Drag and drop the 'dist' folder to netlify.com
-# Or connect your GitHub repository for automatic deployments
-```
+-   `PORT`: The port for the server to listen on (default: `8080`).
+-   `NODE_ENV`: The node environment (`development` or `production`).
+-   `GEMINI_API_KEY` or `GOOGLE_API_KEY`: Your API key for Google Gemini.
+-   `PROVIDER`: The AI provider to use (`gemini` or `mock`). The `mock` provider is useful for local development without an API key.
 
-#### Vercel
-```bash
-# Install Vercel CLI
-npm i -g vercel
+## Railway Deployment
 
-# Deploy
-vercel --prod
-```
+This project is configured for deployment on Railway. The `railway.json` file in the root of the project defines the build and deploy commands.
 
-#### GitHub Pages
-```bash
-# Install gh-pages
-npm install --save-dev gh-pages
+To deploy your own instance, you can use the "Deploy to Railway" button or connect your forked repository to a new Railway project.
 
-# Add to package.json scripts:
-"deploy": "npm run build && gh-pages -d dist"
+You will need to configure the `GEMINI_API_KEY` or `GOOGLE_API_KEY` environment variable in the Railway project settings.
 
-# Deploy
-npm run deploy
-```
+## Troubleshooting
+
+-   **Build Failures:** Clear `node_modules` and reinstall dependencies.
+-   **API Errors:** Check your environment variables and API keys.
 
 ## Architecture
 

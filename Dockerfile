@@ -1,3 +1,4 @@
+
 # Optimized Dockerfile for Railway deployment
 FROM node:18-alpine
 

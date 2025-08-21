@@ -7,28 +7,36 @@ import { createError } from '../middleware/errorHandler';
 const router = Router();
 
 const chatRequestSchema = z.object({
-  message: z.string().min(1).max(10000),
+  prompt: z.string().min(1).max(10000),
+  message: z.string().min(1).max(10000).optional(),
   conversationId: z.string().optional(),
-  stream: z.boolean().default(false)
+  stream: z.boolean().default(false),
+  model: z.string().optional(),
+  temperature: z.number().optional(),
+  system: z.string().optional(),
+  userId: z.string().optional()
 });
 
 // Regular chat endpoint
 router.post('/', async (req: Request, res: Response, next) => {
   try {
-    const { message, conversationId } = chatRequestSchema.parse(req.body);
+    const { prompt, message, conversationId } = chatRequestSchema.parse(req.body);
+    const userMessage = prompt || message;
     
-    logger.info({ requestId: req.id, conversationId }, 'Chat request received');
+    if (!userMessage) {
+      return next(createError('Either prompt or message is required', 400));
+    }
+    
+    logger.info({ conversationId }, 'Chat request received');
     
     const aiProvider = createAIProvider();
-    const response = await aiProvider.generateText(message);
+    const response = await aiProvider.generateText(userMessage);
     
     res.json({
       success: true,
-      data: {
-        message: response,
-        conversationId: conversationId || `conv_${Date.now()}`,
-        timestamp: new Date().toISOString()
-      }
+      text: response,
+      conversationId: conversationId || `conv_${Date.now()}`,
+      timestamp: new Date().toISOString()
     });
     
   } catch (error) {
@@ -42,9 +50,16 @@ router.post('/', async (req: Request, res: Response, next) => {
 // Streaming chat endpoint
 router.post('/stream', async (req: Request, res: Response, next) => {
   try {
-    const { message, conversationId } = chatRequestSchema.parse(req.body);
+    const { prompt, message, conversationId } = chatRequestSchema.parse(req.body);
+    const userMessage = prompt || message;
     
-    logger.info({ requestId: req.id, conversationId }, 'Streaming chat request received');
+    if (!userMessage) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Either prompt or message is required' }));
+      return;
+    }
+    
+    logger.info({ conversationId }, 'Streaming chat request received');
     
     // Set SSE headers
     res.writeHead(200, {
@@ -60,14 +75,14 @@ router.post('/stream', async (req: Request, res: Response, next) => {
     const aiProvider = createAIProvider();
     
     try {
-      for await (const chunk of aiProvider.generateStream(message)) {
-        res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
+      for await (const chunk of aiProvider.generateStream(userMessage)) {
+        res.write(`data: ${JSON.stringify({ delta: chunk })}\n\n`);
       }
       
-      res.write(`data: ${JSON.stringify({ type: 'end' })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
     } catch (streamError) {
-      logger.error({ error: streamError, requestId: req.id }, 'Streaming error');
-      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Stream error occurred' })}\n\n`);
+      logger.error({ error: streamError }, 'Streaming error');
+      res.write(`data: ${JSON.stringify({ error: true, message: 'Stream error occurred' })}\n\n`);
     }
     
     res.end();
