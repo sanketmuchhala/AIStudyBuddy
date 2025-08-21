@@ -30,9 +30,14 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({ subjects, on
     
     try {
       const response = await aiService.getStudyRecommendations(selectedSubject, progress);
-      setResult(response);
+      if (response && response.trim()) {
+        setResult(response);
+      } else {
+        setResult(`Here are some general study recommendations for ${selectedSubject}:\n\n1. Start with reviewing fundamentals and key concepts\n2. Practice active recall - try to explain concepts without looking at notes\n3. Use spaced repetition for memorization\n4. Break study sessions into 25-45 minute chunks with breaks\n5. Find practice problems or questions to test your understanding\n6. Connect new material to what you already know\n7. Teach the concept to someone else or explain it out loud`);
+      }
     } catch (error) {
-      setResult(`Error: ${error instanceof Error ? error.message : 'Failed to get recommendations'}`);
+      console.error('Study recommendations error:', error);
+      setResult(`Here are some general study recommendations for ${selectedSubject}:\n\n1. Start with reviewing fundamentals and key concepts\n2. Practice active recall - try to explain concepts without looking at notes\n3. Use spaced repetition for memorization\n4. Break study sessions into 25-45 minute chunks with breaks\n5. Find practice problems or questions to test your understanding\n6. Connect new material to what you already know\n7. Teach the concept to someone else or explain it out loud\n\nNote: AI service temporarily unavailable, showing general recommendations.`);
     } finally {
       setIsLoading(false);
     }
@@ -46,9 +51,14 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({ subjects, on
     
     try {
       const response = await aiService.explainConcept(concept, selectedSubject);
-      setResult(response);
+      if (response && response.trim()) {
+        setResult(response);
+      } else {
+        setResult(`I'll help explain "${concept}" in the context of ${selectedSubject}:\n\nPlease try the following approach:\n1. Break down the concept into smaller parts\n2. Look for examples and real-world applications\n3. Connect it to other concepts you already understand\n4. Practice with exercises or problems\n5. Try to explain it in your own words\n\nFor more detailed explanations, try searching online resources or textbooks for "${concept} in ${selectedSubject}".`);
+      }
     } catch (error) {
-      setResult(`Error: ${error instanceof Error ? error.message : 'Failed to explain concept'}`);
+      console.error('Explain concept error:', error);
+      setResult(`I'll help explain "${concept}" in the context of ${selectedSubject}:\n\nPlease try the following approach:\n1. Break down the concept into smaller parts\n2. Look for examples and real-world applications\n3. Connect it to other concepts you already understand\n4. Practice with exercises or problems\n5. Try to explain it in your own words\n\nFor more detailed explanations, try searching online resources or textbooks for "${concept} in ${selectedSubject}".\n\nNote: AI service temporarily unavailable, showing general guidance.`);
     } finally {
       setIsLoading(false);
     }
@@ -62,9 +72,14 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({ subjects, on
     
     try {
       const response = await aiService.generatePracticeQuestions(topic, difficulty);
-      setResult(response);
+      if (response && response.trim()) {
+        setResult(response);
+      } else {
+        setResult(`Practice Questions for "${topic}" (${difficulty} level):\n\nSample Question Formats:\n\n1. Multiple Choice:\nWhat is the main concept of ${topic}?\nA) Option 1\nB) Option 2\nC) Option 3\nD) Option 4\n\n2. Short Answer:\nExplain the key principles of ${topic}.\n\n3. Problem Solving:\nApply ${topic} to solve the following scenario...\n\nTip: Create your own questions by:\n- Reviewing chapter headings and key terms\n- Converting statements into questions\n- Finding practice problems in textbooks\n- Using online question generators for your subject`);
+      }
     } catch (error) {
-      setResult(`Error: ${error instanceof Error ? error.message : 'Failed to generate practice questions'}`);
+      console.error('Generate practice error:', error);
+      setResult(`Practice Questions for "${topic}" (${difficulty} level):\n\nSample Question Formats:\n\n1. Multiple Choice:\nWhat is the main concept of ${topic}?\nA) Option 1\nB) Option 2\nC) Option 3\nD) Option 4\n\n2. Short Answer:\nExplain the key principles of ${topic}.\n\n3. Problem Solving:\nApply ${topic} to solve the following scenario...\n\nTip: Create your own questions by:\n- Reviewing chapter headings and key terms\n- Converting statements into questions\n- Finding practice problems in textbooks\n- Using online question generators for your subject\n\nNote: AI service temporarily unavailable, showing sample formats.`);
     } finally {
       setIsLoading(false);
     }
@@ -112,8 +127,8 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({ subjects, on
   ] as const;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-2">
@@ -130,23 +145,23 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({ subjects, on
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          {/* Sidebar */}
-          <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-4">
-            <div className="space-y-2">
+          {/* Compact Sidebar */}
+          <div className="w-48 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-2">
+            <div className="space-y-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-left transition-colors ${
+                    className={`w-full flex items-center space-x-1.5 px-2 py-1.5 rounded-md text-left transition-colors text-sm ${
                       activeTab === tab.id
                         ? 'bg-blue-600 text-white'
                         : 'hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span>{tab.label}</span>
+                    <Icon className="w-4 h-4" />
+                    <span className="text-xs">{tab.label}</span>
                   </button>
                 );
               })}
@@ -156,7 +171,7 @@ export const AIStudyAssistant: React.FC<AIStudyAssistantProps> = ({ subjects, on
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
             {/* Tab Content */}
-            <div className="flex-1 p-6 overflow-y-auto bg-white dark:bg-gray-800">
+            <div className="flex-1 p-4 overflow-y-auto bg-white dark:bg-gray-800">
               {activeTab === 'recommendations' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Get Study Recommendations</h3>

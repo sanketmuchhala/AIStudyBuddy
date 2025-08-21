@@ -1,25 +1,53 @@
+# Dependencies (but keep package*.json)
 node_modules
-.git
-.gitignore
-README.md
+*/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
 .env
 .env.local
 .env.production.local
 .env.staging.local
 .env.development.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.DS_Store
+
+# Git and development
+.git
+.gitignore
 .vscode
 .idea
-*.log
+
+# Documentation (keep essential ones)
+*.md
+!README.md
+!DEPLOYMENT.md
+
+# Build outputs (will be rebuilt)
 dist
 build
 client/dist
 server/dist
+
+# Logs and cache
+*.log
 .cache
 .nyc_output
 coverage
 .tmp
 .temp
+
+# Testing files
+acceptance-test.cjs
+production-test.cjs
+**/test/
+**/*.test.*
+**/*.spec.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development artifacts
+.next
+.turbo

@@ -1,32 +1,58 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+
+# Optimized Dockerfile for Railway deployment
+FROM node:18-alpine
+
 WORKDIR /app
 
-# Copy all package.json and package-lock.json files
-COPY package.json package-lock.json ./
-COPY client/package.json client/package-lock.json ./client/
-COPY server/package.json server/package-lock.json ./server/
+# Set memory-efficient npm settings
+ENV NPM_CONFIG_LOGLEVEL=warn
+ENV NPM_CONFIG_PROGRESS=false
+ENV NODE_OPTIONS="--max_old_space_size=1024"
 
-# Install dependencies
-RUN npm install
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
 
-# Copy the rest of the source code
-COPY . .
+# Copy all package files first
+COPY package*.json ./
+COPY client/package*.json ./client/
+COPY server/package*.json ./server/
 
-# Build client and server
-RUN npm run build
+# Install dependencies with memory optimization
+RUN npm ci --prefer-offline --no-audit --progress=false && \
+    cd client && npm ci --prefer-offline --no-audit --progress=false && \
+    cd ../server && npm ci --prefer-offline --no-audit --progress=false && \
+    npm cache clean --force
 
-# Stage 2: Production
-FROM node:20-alpine
-WORKDIR /app
+# Copy source code
+COPY client/ ./client/
+COPY server/ ./server/
 
-# Copy necessary files from builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/server ./server
-COPY --from=builder /app/client/dist ./client/dist
+# Build client
+RUN cd client && npm run build
 
-ENV PORT=8080
+# Build server  
+RUN cd server && npm run build
+
+# Remove dev dependencies and source files to save space
+RUN cd client && npm prune --production && rm -rf src/ && \
+    cd ../server && npm prune --production && rm -rf src/ && \
+    npm prune --production
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S appuser -u 1001 -G nodejs
+
+# Change ownership
+RUN chown -R appuser:nodejs /app
+
+USER appuser
+
+# Expose port
 EXPOSE 8080
 
-CMD ["npm", "start"]
+# Simplified health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
+
+# Start the application
+CMD ["node", "server/dist/index.js"]
