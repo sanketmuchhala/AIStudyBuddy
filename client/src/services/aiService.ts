@@ -1,4 +1,4 @@
-import config from '../config/environment';
+import { config } from '../config';
 import errorHandler, { APIError, NetworkError } from '../utils/errorHandler';
 
 export interface AIMessage {

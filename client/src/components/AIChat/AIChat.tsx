@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Copy, Settings, X, Loader2 } from 'lucide-react';
 import { aiService, AIMessage } from '../../services/aiService';
-import config from '../../config/environment';
+import { config } from '../../config';
 
 interface AIChatProps {
   isOpen: boolean;

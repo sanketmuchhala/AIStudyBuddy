@@ -37,12 +37,34 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS - allow localhost for development, same origin for production
+// CORS configuration for GitHub Pages + Railway deployment
+const getAllowedOrigins = () => {
+  if (NODE_ENV === 'development') {
+    return ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'];
+  }
+  
+  // Production: allow GitHub Pages and same origin
+  const allowedOrigins = [
+    // GitHub Pages patterns
+    /^https:\/\/[\w-]+\.github\.io$/,
+    // Same origin (for Railway full-stack deploy)
+    false
+  ];
+  
+  // If ALLOWED_ORIGINS env var is set, add those domains  
+  const envOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean);
+  if (envOrigins?.length) {
+    allowedOrigins.push(...envOrigins.map(origin => new RegExp(`^${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)));
+  }
+  
+  return allowedOrigins;
+};
+
 app.use(cors({
-  origin: NODE_ENV === 'development' 
-    ? ['http://localhost:5173', 'http://localhost:3000'] 
-    : false, // Same origin only in production
-  credentials: true
+  origin: getAllowedOrigins(),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with']
 }));
 
 // Rate limiting
