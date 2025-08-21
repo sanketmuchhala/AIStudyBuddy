@@ -6,8 +6,8 @@ export default defineConfig(({ mode }) => {
   const isProd = mode === 'production';
 
   return {
-    // Set base path for GitHub Pages deployment
-    base: isProd ? '/AIStudyBuddy/' : '/',
+    // Set base path for Vercel deployment
+    base: '/',
     
     build: {
       // Optimize chunks for better loading

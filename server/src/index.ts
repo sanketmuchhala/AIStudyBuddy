@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import path from 'path';
 import dotenv from 'dotenv';
 import pino from 'pino';
 import { chatRoutes } from './routes/chat';
@@ -28,7 +27,7 @@ export const logger = pino({
   } : undefined
 });
 
-// Trust proxy for Railway
+// Trust proxy for Vercel
 app.set('trust proxy', 1);
 
 // Security middleware
@@ -37,17 +36,18 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS configuration for GitHub Pages + Railway deployment
+// CORS configuration for Vercel deployment
 const getAllowedOrigins = () => {
   if (NODE_ENV === 'development') {
     return ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'];
   }
   
-  // Production: allow GitHub Pages and same origin
+  // Production: allow Vercel domains and same origin
   const allowedOrigins = [
-    // GitHub Pages patterns
-    /^https:\/\/[\w-]+\.github\.io$/,
-    // Same origin (for Railway full-stack deploy)
+    // Vercel patterns
+    /^https:\/\/[\w-]+\.vercel\.app$/,
+    /^https:\/\/[\w-]+\.now\.sh$/,
+    // Same origin (for Vercel full-stack deploy)
     false
   ];
   
@@ -83,33 +83,20 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request logging
 app.use(requestLogger);
 
-// Health check endpoint (for Railway)
+// Health check endpoint (for Vercel)
 app.get('/healthz', (req, res) => {
   res.status(200).json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    platform: 'vercel'
   });
 });
 
 // API Routes
 app.use('/api/chat', chatRoutes);
 app.use('/api/quick', quickActionsRoutes);
-
-// Serve static files in production
-if (NODE_ENV === 'production' || process.env.SERVE_STATIC) {
-  const clientPath = path.join(__dirname, '../client/dist');
-  app.use(express.static(clientPath));
-
-  // SPA fallback
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/healthz')) {
-      return next();
-    }
-    res.sendFile(path.join(clientPath, 'index.html'));
-  });
-}
 
 // Error handling
 app.use(errorHandler);
@@ -122,29 +109,35 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-const server = app.listen(PORT, () => {
-  logger.info(`🚀 AIStudyBuddy server started on port ${PORT}`);
-  logger.info(`📦 Environment: ${NODE_ENV}`);
-  logger.info(`🔒 Security: ${NODE_ENV === 'production' ? 'Production' : 'Development'} mode`);
-  logger.info(`🏥 Health check available at: http://localhost:${PORT}/healthz`);
-  
-  // Signal that the server is ready
-  if (process.send) {
-    process.send('ready');
-  }
-});
-
-// Handle server errors
-server.on('error', (error) => {
-  logger.error('Server error:', error);
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    logger.info('Server closed');
-    process.exit(0);
+// Only start server if not in Vercel environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const server = app.listen(PORT, () => {
+    logger.info(`🚀 AIStudyBuddy server started on port ${PORT}`);
+    logger.info(`📦 Environment: ${NODE_ENV}`);
+    logger.info(`🔒 Security: ${NODE_ENV === 'production' ? 'Production' : 'Development'} mode`);
+    logger.info(`🏥 Health check available at: http://localhost:${PORT}/healthz`);
+    
+    // Signal that the server is ready
+    if (process.send) {
+      process.send('ready');
+    }
   });
-});
+
+  // Handle server errors
+  server.on('error', (error) => {
+    logger.error('Server error:', error);
+    process.exit(1);
+  });
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    logger.info('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+      logger.info('Server closed');
+      process.exit(0);
+    });
+  });
+}
+
+// Export for Vercel
+export default app;

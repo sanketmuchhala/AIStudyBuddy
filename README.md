@@ -69,7 +69,7 @@ graph TB
     
     subgraph "External Services"
         T[Google Gemini API] --> U[AI Chat Backend]
-        U --> V[Railway Deployment]
+        U --> V[Vercel Deployment]
     end
     
     A --> E
@@ -143,37 +143,58 @@ graph TB
 - `GEMINI_API_KEY` or `GOOGLE_API_KEY`: Your API key for Google Gemini
 - `PROVIDER`: The AI provider to use (`gemini` or `mock`). The `mock` provider is useful for local development without an API key
 
-## Railway Deployment
+## Vercel Deployment
 
-This project is configured for deployment on Railway with the following setup:
+This project is configured for deployment on Vercel with the following setup:
 
 ### Deployment Configuration
-- **Builder**: Dockerfile (multi-stage build)
-- **Start Command**: `node server/dist/index.js`
-- **Health Check**: `/healthz` endpoint
-- **Port**: 8080 (auto-configured by Railway)
+- **Frontend**: React app built with Vite
+- **Backend**: Express.js API routes
+- **Build Process**: Multi-stage build for both client and server
+- **Static Assets**: Served by Vercel's CDN
+- **API Routes**: Serverless functions with 30-second timeout
 
 ### Deployment Steps
-1. Connect your GitHub repository to Railway
-2. Railway will automatically detect the Dockerfile and build the application
-3. Set environment variables in Railway dashboard:
-   - `GEMINI_API_KEY`: Your Google Gemini API key (optional - app works with mock AI)
-   - `NODE_ENV`: Set to `production` (auto-detected)
-4. Deploy - Railway will build and start the application
+1. **Create Vercel Account**: Sign up at [vercel.com](https://vercel.com)
+2. **Install Vercel CLI**: `npm i -g vercel`
+3. **Deploy from GitHub**:
+   - Connect your GitHub repository to Vercel
+   - Vercel will automatically detect the configuration
+   - Set environment variables in Vercel dashboard:
+     - `GEMINI_API_KEY`: Your Google Gemini API key (optional - app works with mock AI)
+     - `NODE_ENV`: Set to `production`
+4. **Deploy**: Vercel will build and deploy automatically
 
 ### Production Features
-- **Static File Serving**: Express serves the React build in production
+- **Global CDN**: Static assets served from edge locations
+- **Serverless API**: Auto-scaling API routes
 - **Security Headers**: Helmet middleware with production security
 - **Rate Limiting**: 100 requests per 15 minutes per IP
-- **CORS Protection**: Configured for production deployment
-- **Health Monitoring**: `/healthz` endpoint for Railway health checks
+- **CORS Protection**: Configured for Vercel deployment
+- **Health Monitoring**: `/healthz` endpoint for monitoring
 
 ### Testing Your Deployment
 Once deployed, test these endpoints:
-- `https://[your-app-name].railway.app/` - Main app (React SPA)
-- `https://[your-app-name].railway.app/healthz` - Health check
-- `https://[your-app-name].railway.app/chat` - Chat page
-- `https://[your-app-name].railway.app/quick-actions` - Quick Actions
+- `https://[your-app-name].vercel.app/` - Main app (React SPA)
+- `https://[your-app-name].vercel.app/healthz` - Health check
+- `https://[your-app-name].vercel.app/chat` - Chat page
+- `https://[your-app-name].vercel.app/quick-actions` - Quick Actions
+- `https://[your-app-name].vercel.app/api/chat` - API endpoint
+
+### Local Development with Vercel
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Link to your Vercel project
+vercel link
+
+# Deploy to preview
+vercel
+
+# Deploy to production
+vercel --prod
+```
 
 ## Architecture
 
@@ -260,7 +281,9 @@ src/components/
 
 - **Build Failures**: Clear `node_modules` and reinstall dependencies
 - **API Errors**: Check your environment variables and API keys
-- **Railway Deployment Issues**: Verify Dockerfile and railway.json configuration
+- **Vercel Deployment Issues**: Verify vercel.json configuration and build scripts
+- **Function Timeout**: API routes have 30-second timeout limit
+- **CORS Issues**: Ensure CORS is configured for your Vercel domain
 - **Health Check Failures**: Ensure `/healthz` endpoint is accessible
 
 ## Contributing
