@@ -10,7 +10,8 @@
     "build": "cd server && npm ci && npm run build && cd ../client && npm ci && npm run build",
     "start": "cd server && npm start",
     "lint": "cd client && npm run lint",
-    "preview": "cd client && npm run preview"
+    "preview": "cd client && npm run preview",
+    "test:health": "node test-health-check.js"
   },
   "dependencies": {
     "date-fns": "^4.1.0",

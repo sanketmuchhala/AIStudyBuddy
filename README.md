@@ -1,40 +1,40 @@
-# 🤖 AIStudyBuddy
+# AIStudyBuddy
 
-A modern, AI-powered study companion built with React, TypeScript, and AI. Features streaming chat, quick actions, and comprehensive study tools with a beautiful, accessible UI.
+A modern, AI-powered study companion built with React, TypeScript, and Express. Features streaming chat, quick actions, and comprehensive study tools with a beautiful, accessible UI.
 
-[![Deploy to GitHub Pages](https://github.com/your-username/AIStudyBuddy/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-username/AIStudyBuddy/actions/workflows/deploy.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-## ✨ Features
+## Features
 
-### 🔥 Core Functionality
-- **🎯 AI Chat**: Streaming conversations with retry, stop, and message editing
-- **⚡ Quick Actions**: Instant AI-powered study tools
+### Core Functionality
+- **AI Chat**: Streaming conversations with retry, stop, and message editing
+- **Quick Actions**: Instant AI-powered study tools
   - Content summarization (text, URLs, PDFs)
   - 7-day study plan generation
   - Flashcard creation from any content
   - Topic explanations at multiple levels
   - Custom quiz generation
-- **📚 Study Tools**: Dedicated workspace for learning
+- **Study Tools**: Dedicated workspace for learning
   - Interactive flashcard builder with export
   - Multi-choice quiz maker with explanations
   - Topic explainer with adjustable complexity
 
-### 🎨 Modern UI/UX
-- **🌓 Dark/Light Theme**: System preference with manual toggle
-- **📱 Fully Responsive**: Mobile-first design that works everywhere
-- **♿ Accessibility**: WCAG AA compliant with proper ARIA labels
-- **🎯 Focus Management**: Keyboard navigation and screen reader support
-- **⚡ Performance**: 95+ Lighthouse scores across all metrics
+### Modern UI/UX
+- **Dark/Light Theme**: System preference with manual toggle
+- **Fully Responsive**: Mobile-first design that works everywhere
+- **Accessibility**: WCAG AA compliant with proper ARIA labels
+- **Focus Management**: Keyboard navigation and screen reader support
+- **Performance**: 95+ Lighthouse scores across all metrics
 
-### 🛠️ Technical Excellence
-- **🔄 Real-time Streaming**: Server-sent events for instant responses
-- **🚫 Error Boundaries**: Graceful error handling with recovery options
-- **💾 Persistence**: Local storage for conversations and preferences
-- **🔒 Type Safety**: Full TypeScript coverage with strict mode
-- **🎯 Modern Stack**: Vite, React Query, Radix UI, Tailwind CSS
+### Technical Excellence
+- **Real-time Streaming**: Server-sent events for instant responses
+- **Error Boundaries**: Graceful error handling with recovery options
+- **Persistence**: Local storage for conversations and preferences
+- **Type Safety**: Full TypeScript coverage with strict mode
+- **Modern Stack**: Vite, React, Express, Tailwind CSS
 
 ## System Architecture
 
@@ -46,34 +46,43 @@ graph TB
         C --> D[Local Storage]
     end
     
+    subgraph "Backend Layer"
+        E[Express Server] --> F[TypeScript API]
+        F --> G[AI Service]
+        G --> H[Rate Limiting]
+        H --> I[Security Headers]
+    end
+    
     subgraph "AI Algorithms Layer"
-        E[Spaced Repetition Engine] --> F[Schedule Optimizer]
-        F --> G[Pattern Analyzer]
-        G --> H[Recommendation Engine]
-        H --> I[Performance Predictor]
-        I --> J[Interview Coach]
+        J[Spaced Repetition Engine] --> K[Schedule Optimizer]
+        K --> L[Pattern Analyzer]
+        L --> M[Recommendation Engine]
+        M --> N[Performance Predictor]
+        N --> O[Interview Coach]
     end
     
     subgraph "Data Layer"
-        K[Study Sessions] --> L[Subject Data]
-        L --> M[Progress Tracking]
-        M --> N[Analytics Data]
+        P[Study Sessions] --> Q[Subject Data]
+        Q --> R[Progress Tracking]
+        R --> S[Analytics Data]
     end
     
     subgraph "External Services"
-        O[Google Gemini API] --> P[AI Chat Backend]
-        P --> Q[Railway Deployment]
+        T[Google Gemini API] --> U[AI Chat Backend]
+        U --> V[Railway Deployment]
     end
     
     A --> E
-    A --> K
-    A --> O
-    E --> K
-    F --> K
-    G --> K
-    H --> K
-    I --> K
-    J --> O
+    A --> J
+    A --> P
+    A --> T
+    E --> G
+    J --> P
+    K --> P
+    L --> P
+    M --> P
+    N --> P
+    O --> T
 ```
 
 ## Key Features
@@ -102,102 +111,69 @@ graph TB
 - **Answer Quality Analysis**: Provides intelligent feedback on response completeness
 - **Mock Interview Simulation**: Realistic timed interview experiences
 
-### Personalized Study Techniques
-- **Technique Effectiveness Analysis**: Tracks which methods work best for you
-- **Subject-Specific Recommendations**: Suggests optimal techniques per subject type
-- **Learning Style Adaptation**: Adjusts to visual, auditory, or kinesthetic preferences
-- **Progress-Based Adjustments**: Modifies difficulty and techniques based on mastery
-
-## Sophisticated Algorithms
-
-### 1. Spaced Repetition Engine
-```typescript
-// SM-2 Algorithm Implementation
-function calculateNextReview(quality: number, easeFactor: number, interval: number) {
-  // Optimizes review intervals based on memory retention science
-  const newEaseFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-  // Implements forgetting curve mathematics for optimal retention
-}
-```
-
-### 2. Schedule Optimization
-```typescript
-// Multi-objective optimization considering:
-// - Deadline urgency (exponential weighting)
-// - Cognitive load balancing
-// - User productivity patterns
-// - Subject dependencies and prerequisites
-function generateOptimalSchedule(subjects, constraints, productivityPattern) {
-  // Advanced scheduling algorithm with multiple optimization factors
-}
-```
-
-### 3. Adaptive Learning Analysis
-```typescript
-// Machine learning approach to analyze user patterns
-class AdaptiveLearningAnalyzer {
-  static analyzeProductivityPattern(sessions) {
-    // Analyzes hourly and daily productivity patterns
-    // Calculates optimal session lengths and break intervals
-    // Identifies cognitive load patterns and focus decline rates
-  }
-}
-```
-
-### 4. Performance Prediction
-```typescript
-// Predicts study outcomes using multiple factors
-function predictSubjectCompletion(subjects, sessions, productivityPattern) {
-  // Calculates completion probability using velocity analysis
-  // Considers difficulty adjustments and time constraints
-  // Provides confidence intervals and risk assessments
-}
-```
-
 ## Local Development
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/sanketmuchhala/AIStudyBuddy.git
-    cd AIStudyBuddy
-    ```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/sanketmuchhala/AIStudyBuddy.git
+   cd AIStudyBuddy
+   ```
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-3.  **Set up environment variables:**
-    Create a `.env` file in the root of the project and add the following variables:
-    ```
-    GEMINI_API_KEY=your_gcp_api_key
-    ```
+3. **Set up environment variables:**
+   Create a `.env` file in the root of the project and add the following variables:
+   ```
+   GEMINI_API_KEY=your_gcp_api_key
+   ```
 
-4.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-    This will start both the frontend and backend servers concurrently. The frontend will be available at `http://localhost:5173`.
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+   This will start both the frontend and backend servers concurrently. The frontend will be available at `http://localhost:5173`.
 
 ## Environment Variables
 
--   `PORT`: The port for the server to listen on (default: `8080`).
--   `NODE_ENV`: The node environment (`development` or `production`).
--   `GEMINI_API_KEY` or `GOOGLE_API_KEY`: Your API key for Google Gemini.
--   `PROVIDER`: The AI provider to use (`gemini` or `mock`). The `mock` provider is useful for local development without an API key.
+- `PORT`: The port for the server to listen on (default: `8080`)
+- `NODE_ENV`: The node environment (`development` or `production`)
+- `GEMINI_API_KEY` or `GOOGLE_API_KEY`: Your API key for Google Gemini
+- `PROVIDER`: The AI provider to use (`gemini` or `mock`). The `mock` provider is useful for local development without an API key
 
 ## Railway Deployment
 
-This project is configured for deployment on Railway. The `railway.json` file in the root of the project defines the build and deploy commands.
+This project is configured for deployment on Railway with the following setup:
 
-To deploy your own instance, you can use the "Deploy to Railway" button or connect your forked repository to a new Railway project.
+### Deployment Configuration
+- **Builder**: Dockerfile (multi-stage build)
+- **Start Command**: `node server/dist/index.js`
+- **Health Check**: `/healthz` endpoint
+- **Port**: 8080 (auto-configured by Railway)
 
-You will need to configure the `GEMINI_API_KEY` or `GOOGLE_API_KEY` environment variable in the Railway project settings.
+### Deployment Steps
+1. Connect your GitHub repository to Railway
+2. Railway will automatically detect the Dockerfile and build the application
+3. Set environment variables in Railway dashboard:
+   - `GEMINI_API_KEY`: Your Google Gemini API key (optional - app works with mock AI)
+   - `NODE_ENV`: Set to `production` (auto-detected)
+4. Deploy - Railway will build and start the application
 
-## Troubleshooting
+### Production Features
+- **Static File Serving**: Express serves the React build in production
+- **Security Headers**: Helmet middleware with production security
+- **Rate Limiting**: 100 requests per 15 minutes per IP
+- **CORS Protection**: Configured for production deployment
+- **Health Monitoring**: `/healthz` endpoint for Railway health checks
 
--   **Build Failures:** Clear `node_modules` and reinstall dependencies.
--   **API Errors:** Check your environment variables and API keys.
+### Testing Your Deployment
+Once deployed, test these endpoints:
+- `https://[your-app-name].railway.app/` - Main app (React SPA)
+- `https://[your-app-name].railway.app/healthz` - Health check
+- `https://[your-app-name].railway.app/chat` - Chat page
+- `https://[your-app-name].railway.app/quick-actions` - Quick Actions
 
 ## Architecture
 
@@ -207,6 +183,12 @@ You will need to configure the `GEMINI_API_KEY` or `GOOGLE_API_KEY` environment 
 - **TailwindCSS** for responsive, modern UI
 - **Date-fns** for intelligent date manipulation
 - **Lucide React** for consistent iconography
+
+### Backend Stack
+- **Express.js** with TypeScript
+- **Google Gemini AI** for intelligent responses
+- **Rate limiting** and security middleware
+- **Static file serving** for production builds
 
 ### Smart Algorithms
 ```
@@ -244,32 +226,13 @@ src/components/
 - **Adaptive Algorithms**: Adjusts difficulty and recommendations based on performance
 - **Risk Assessment**: Predicts and prevents study burnout and bottlenecks
 
-### Personalization Engine
-- **Learning Style Detection**: Adapts to individual preferences
-- **Performance Analysis**: Tracks effectiveness across different techniques
-- **Motivation Modeling**: Adjusts recommendations based on progress momentum
-- **Goal Achievement Prediction**: Calculates probability of meeting deadlines
-
-## Customization
-
-### Algorithm Tuning
-The AI algorithms can be fine-tuned by modifying parameters in:
-- `spacedRepetition.ts` - Adjust retention models
-- `scheduleOptimizer.ts` - Modify optimization weights
-- `patternAnalyzer.ts` - Change pattern detection sensitivity
-
-### UI Themes
-Customize the appearance by modifying TailwindCSS variables in:
-- `tailwind.config.js` - Color schemes and design tokens
-- `index.css` - Custom animations and effects
-
 ## Performance
 
 ### Optimizations
 - **Lazy Loading**: Components load on demand
 - **Memoization**: Expensive calculations cached
 - **Local Storage**: Efficient data persistence
-- **PWA Caching**: Offline functionality with service workers
+- **Multi-stage Docker Build**: Optimized production images
 
 ### Metrics
 - **Bundle Size**: ~263KB gzipped (production)
@@ -280,10 +243,10 @@ Customize the appearance by modifying TailwindCSS variables in:
 ## Privacy & Security
 
 ### Data Protection
-- **Local Storage Only**: No data sent to external servers
+- **Local Storage Only**: No data sent to external servers (except AI API)
 - **Privacy by Design**: No tracking or analytics
-- **Offline Capable**: Works completely offline
-- **Export Functionality**: Full data portability
+- **Security Headers**: Helmet middleware protection
+- **Rate Limiting**: Prevents abuse and ensures fair usage
 
 ## Testing & Quality
 
@@ -293,34 +256,12 @@ Customize the appearance by modifying TailwindCSS variables in:
 - **Prettier**: Automatic code formatting
 - **Modern React**: Hooks, context, and best practices
 
-## Deployment Status
+## Troubleshooting
 
-**Production Ready**
-- Built and tested
-- PWA enabled
-- Performance optimized
-- Mobile responsive
-- Offline capable
-
-## Usage Examples
-
-### Study Planning
-1. Add subjects with deadlines and difficulty ratings
-2. Set your productivity preferences and peak hours
-3. Generate AI-optimized study schedule
-4. Track progress with intelligent analytics
-
-### Interview Preparation
-1. Select question category (technical/behavioral/coding)
-2. Practice with adaptive difficulty progression
-3. Receive AI feedback on answer quality
-4. Track readiness score and improvement areas
-
-### Performance Analysis
-1. Review learning velocity and effectiveness trends
-2. Identify optimal study times and techniques
-3. Get personalized recommendations for improvement
-4. Monitor risk factors and burnout prevention
+- **Build Failures**: Clear `node_modules` and reinstall dependencies
+- **API Errors**: Check your environment variables and API keys
+- **Railway Deployment Issues**: Verify Dockerfile and railway.json configuration
+- **Health Check Failures**: Ensure `/healthz` endpoint is accessible
 
 ## Contributing
 

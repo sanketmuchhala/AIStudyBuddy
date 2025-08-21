@@ -83,14 +83,23 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request logging
 app.use(requestLogger);
 
+// Health check endpoint (for Railway)
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // API Routes
-app.use('/healthz', healthRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/quick', quickActionsRoutes);
 
 // Serve static files in production
 if (NODE_ENV === 'production' || process.env.SERVE_STATIC) {
-  const clientPath = path.join(__dirname, '../../client/dist');
+  const clientPath = path.join(__dirname, '../client/dist');
   app.use(express.static(clientPath));
 
   // SPA fallback
@@ -113,8 +122,29 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`🚀 AIStudyBuddy server started on port ${PORT}`);
   logger.info(`📦 Environment: ${NODE_ENV}`);
   logger.info(`🔒 Security: ${NODE_ENV === 'production' ? 'Production' : 'Development'} mode`);
+  logger.info(`🏥 Health check available at: http://localhost:${PORT}/healthz`);
+  
+  // Signal that the server is ready
+  if (process.send) {
+    process.send('ready');
+  }
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  logger.error('Server error:', error);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
 });

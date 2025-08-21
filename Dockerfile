@@ -1,58 +1,62 @@
-
-# Optimized Dockerfile for Railway deployment
-FROM node:18-alpine
-
-WORKDIR /app
-
-# Set memory-efficient npm settings
-ENV NPM_CONFIG_LOGLEVEL=warn
-ENV NPM_CONFIG_PROGRESS=false
-ENV NODE_OPTIONS="--max_old_space_size=1024"
+# Multi-stage build for Railway deployment
+FROM node:18-alpine AS base
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
 
-# Copy all package files first
+# Set working directory
+WORKDIR /app
+
+# Copy package files
 COPY package*.json ./
 COPY client/package*.json ./client/
 COPY server/package*.json ./server/
 
-# Install dependencies with memory optimization
-RUN npm ci --prefer-offline --no-audit --progress=false && \
-    cd client && npm ci --prefer-offline --no-audit --progress=false && \
-    cd ../server && npm ci --prefer-offline --no-audit --progress=false && \
-    npm cache clean --force
+# Install dependencies
+RUN npm ci --only=production && \
+    cd client && npm ci && \
+    cd ../server && npm ci
+
+# Build stage
+FROM base AS builder
 
 # Copy source code
-COPY client/ ./client/
-COPY server/ ./server/
+COPY . .
 
 # Build client
 RUN cd client && npm run build
 
-# Build server  
+# Build server
 RUN cd server && npm run build
 
-# Remove dev dependencies and source files to save space
-RUN cd client && npm prune --production && rm -rf src/ && \
-    cd ../server && npm prune --production && rm -rf src/ && \
-    npm prune --production
+# Production stage
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S appuser -u 1001 -G nodejs
 
-# Change ownership
-RUN chown -R appuser:nodejs /app
+# Copy built application
+COPY --from=builder --chown=appuser:nodejs /app/server/dist ./server/dist
+COPY --from=builder --chown=appuser:nodejs /app/server/package*.json ./server/
+COPY --from=builder --chown=appuser:nodejs /app/client/dist ./client/dist
+
+# Install only production dependencies
+RUN cd server && npm ci --only=production
 
 USER appuser
 
 # Expose port
 EXPOSE 8080
 
-# Simplified health check
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
+  CMD curl -f http://localhost:8080/healthz || exit 1
 
 # Start the application
 CMD ["node", "server/dist/index.js"]
