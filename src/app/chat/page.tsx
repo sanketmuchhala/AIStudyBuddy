@@ -193,12 +193,11 @@ export default function ChatPage() {
                   <Card className={`${message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}`}>
                     <CardContent className="p-3">
                       {message.role === 'assistant' ? (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          className="prose prose-sm dark:prose-invert max-w-none"
-                        >
-                          {message.content}
-                        </ReactMarkdown>
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
                       ) : (
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       )}
