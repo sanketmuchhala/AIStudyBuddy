@@ -63,7 +63,7 @@ Return the response as a JSON array with this structure:
     }])
 
     const content = response.choices[0].message.content
-    let questions: any[] = []
+    let questions: Record<string, unknown>[] = []
 
     try {
       // Extract JSON from the response

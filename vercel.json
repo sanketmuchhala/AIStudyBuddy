@@ -4,9 +4,6 @@
       "maxDuration": 30
     }
   },
-  "env": {
-    "DEEPSEEK_API_KEY": "@deepseek-api-key"
-  },
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1"

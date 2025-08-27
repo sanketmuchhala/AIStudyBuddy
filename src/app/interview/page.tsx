@@ -241,7 +241,7 @@ export default function InterviewPage() {
 
                 <div className="space-y-2">
                   <Label>Experience Level</Label>
-                  <Select value={experienceLevel} onValueChange={(value: any) => setExperienceLevel(value)}>
+                  <Select value={experienceLevel} onValueChange={(value: string) => setExperienceLevel(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
