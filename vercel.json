@@ -1,6 +1,6 @@
 {
   "functions": {
-    "app/api/**/*.ts": {
+    "src/app/api/**/*.ts": {
       "maxDuration": 30
     }
   },
@@ -11,11 +11,5 @@
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
-  ]
+  }
 }
