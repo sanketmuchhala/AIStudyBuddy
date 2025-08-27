@@ -1,5 +1,10 @@
 import { NextRequest } from 'next/server'
-import pdfParse from 'pdf-parse'
+
+// Dynamically import pdf-parse to avoid initialization issues
+const parsePdf = async (buffer: Buffer) => {
+  const pdfParse = (await import('pdf-parse')).default
+  return pdfParse(buffer)
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,14 +18,28 @@ export async function POST(request: NextRequest) {
     let extractedText = ''
 
     if (file.type === 'application/pdf') {
-      const arrayBuffer = await file.arrayBuffer()
-      const buffer = Buffer.from(arrayBuffer)
-      const data = await pdfParse(buffer)
-      extractedText = data.text
+      try {
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const data = await parsePdf(buffer)
+        extractedText = data.text || ''
+      } catch (pdfError) {
+        console.error('PDF parsing error:', pdfError)
+        return Response.json({ 
+          error: 'Failed to parse PDF file. Please ensure it contains readable text or try uploading a text file instead.' 
+        }, { status: 400 })
+      }
     } else if (file.type === 'text/plain') {
       extractedText = await file.text()
     } else {
       return Response.json({ error: 'Unsupported file type. Please upload PDF or TXT files.' }, { status: 400 })
+    }
+
+    // Ensure we have some text to work with
+    if (!extractedText.trim()) {
+      return Response.json({ 
+        error: 'No readable text found in the uploaded file. Please try a different file or upload a text version.' 
+      }, { status: 400 })
     }
 
     // Extract basic information using simple pattern matching
