@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chatSessions     ChatSession[]
+  flashcards       Flashcard[]
+  interviewSessions InterviewSession[]
+  studySessions    StudySession[]
+
+  @@map("users")
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  title     String?
+  userId    String   @default("default")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id            String   @id @default(cuid())
+  content       String
+  role          String   // 'user' | 'assistant' | 'system'
+  chatSessionId String
+  createdAt     DateTime @default(now())
+
+  chatSession ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+model Flashcard {
+  id               String    @id @default(cuid())
+  front            String
+  back             String
+  category         String?
+  difficulty       Int       @default(0) // SM-2 difficulty
+  interval         Int       @default(1) // Days until next review
+  repetitions      Int       @default(0) // Number of successful reviews
+  easeFactor       Float     @default(2.5) // SM-2 ease factor
+  nextReviewDate   DateTime  @default(now())
+  lastReviewedAt   DateTime?
+  userId           String    @default("default")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("flashcards")
+}
+
+model InterviewSession {
+  id              String   @id @default(cuid())
+  role            String
+  company         String?
+  resumeText      String?
+  questionsData   String? // JSON string of generated questions
+  practiceResults String? // JSON string of practice session results
+  userId          String   @default("default")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions InterviewQuestion[]
+
+  @@map("interview_sessions")
+}
+
+model InterviewQuestion {
+  id                  String   @id @default(cuid())
+  question            String
+  type                String   // 'technical' | 'behavioral' | 'situational'
+  suggestedAnswer     String?
+  starFramework       String? // JSON string for behavioral questions
+  difficulty          String   @default("medium") // 'easy' | 'medium' | 'hard'
+  interviewSessionId  String
+  createdAt           DateTime @default(now())
+
+  interviewSession InterviewSession @relation(fields: [interviewSessionId], references: [id], onDelete: Cascade)
+
+  @@map("interview_questions")
+}
+
+model StudySession {
+  id          String   @id @default(cuid())
+  type        String   // 'pomodoro' | 'deep' | 'review'
+  duration    Int      // minutes
+  subject     String?
+  notes       String?
+  completed   Boolean  @default(false)
+  userId      String   @default("default")
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("study_sessions")
+}
+
+model StudyStreak {
+  id          String   @id @default(cuid())
+  userId      String   @default("default")
+  currentDays Int      @default(0)
+  longestDays Int      @default(0)
+  lastStudied DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId])
+  @@map("study_streaks")
+}
