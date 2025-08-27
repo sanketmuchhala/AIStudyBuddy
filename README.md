@@ -1,337 +1,208 @@
-# 🤖 AIStudyBuddy
+# AI Study Buddy
 
-A modern, AI-powered study companion built with React, TypeScript, and AI. Features streaming chat, quick actions, and comprehensive study tools with a beautiful, accessible UI.
+A modern, AI-powered study companion built with Next.js, featuring intelligent chat assistance, interview preparation, spaced repetition flashcards, and Pomodoro timer functionality.
 
-[![Deploy to GitHub Pages](https://github.com/your-username/AIStudyBuddy/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-username/AIStudyBuddy/actions/workflows/deploy.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+![AI Study Buddy Dashboard](https://via.placeholder.com/800x400/1f2937/ffffff?text=AI+Study+Buddy+Dashboard)
 
 ## ✨ Features
 
-### 🔥 Core Functionality
-- **🎯 AI Chat**: Streaming conversations with retry, stop, and message editing
-- **⚡ Quick Actions**: Instant AI-powered study tools
-  - Content summarization (text, URLs, PDFs)
-  - 7-day study plan generation
-  - Flashcard creation from any content
-  - Topic explanations at multiple levels
-  - Custom quiz generation
-- **📚 Study Tools**: Dedicated workspace for learning
-  - Interactive flashcard builder with export
-  - Multi-choice quiz maker with explanations
-  - Topic explainer with adjustable complexity
+### 🤖 AI Chat Assistant
+- **DeepSeek-powered conversations** for instant study help
+- **Streaming responses** with real-time typing effect
+- **Markdown support** with syntax highlighting for code
+- **Session persistence** with conversation history
+- **Keyboard shortcuts** (Cmd/Ctrl+Enter to send)
 
-### 🎨 Modern UI/UX
-- **🌓 Dark/Light Theme**: System preference with manual toggle
-- **📱 Fully Responsive**: Mobile-first design that works everywhere
-- **♿ Accessibility**: WCAG AA compliant with proper ARIA labels
-- **🎯 Focus Management**: Keyboard navigation and screen reader support
-- **⚡ Performance**: 95+ Lighthouse scores across all metrics
+### 🎯 Interview Preparation
+- **Resume upload & parsing** (PDF/TXT support)
+- **AI-generated interview questions** tailored to your role
+- **Behavioral question frameworks** (STAR method)
+- **Practice mode** with timed sessions
+- **Question categorization** (Technical, Behavioral, Situational)
 
-### 🛠️ Technical Excellence
-- **🔄 Real-time Streaming**: Server-sent events for instant responses
-- **🚫 Error Boundaries**: Graceful error handling with recovery options
-- **💾 Persistence**: Local storage for conversations and preferences
-- **🔒 Type Safety**: Full TypeScript coverage with strict mode
-- **🎯 Modern Stack**: Vite, React Query, Radix UI, Tailwind CSS
+### 📚 Spaced Repetition Flashcards
+- **SM-2 algorithm implementation** for optimal learning
+- **Difficulty-based review scheduling** 
+- **Performance tracking** with retention statistics
+- **Category organization** for different subjects
+- **Keyboard shortcuts** (1-4 for rating, Space to flip)
 
-## System Architecture
+### ⏰ Pomodoro Study Timer
+- **Customizable focus sessions** (15-60 minutes)
+- **Automatic break reminders** (short & long breaks)
+- **Study streak tracking** with daily goals
+- **Session notes** and subject tracking
+- **Sound notifications** and visual progress
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[React App] --> B[TypeScript Components]
-        B --> C[State Management]
-        C --> D[Local Storage]
-    end
-    
-    subgraph "AI Algorithms Layer"
-        E[Spaced Repetition Engine] --> F[Schedule Optimizer]
-        F --> G[Pattern Analyzer]
-        G --> H[Recommendation Engine]
-        H --> I[Performance Predictor]
-        I --> J[Interview Coach]
-    end
-    
-    subgraph "Data Layer"
-        K[Study Sessions] --> L[Subject Data]
-        L --> M[Progress Tracking]
-        M --> N[Analytics Data]
-    end
-    
-    subgraph "External Services"
-        O[Google Gemini API] --> P[AI Chat Backend]
-        P --> Q[Railway Deployment]
-    end
-    
-    A --> E
-    A --> K
-    A --> O
-    E --> K
-    F --> K
-    G --> K
-    H --> K
-    I --> K
-    J --> O
-```
+### 🎨 Beautiful UI/UX
+- **Dark/Light mode** with system preference detection
+- **Responsive design** for all devices
+- **Smooth animations** with Framer Motion
+- **Accessible components** with proper ARIA labels
+- **Modern design** with shadcn/ui components
 
-## Key Features
+## 🚀 Quick Start
 
-### Real AI Intelligence
-- **Spaced Repetition Algorithm (SM-2)**: Scientifically optimizes review intervals for maximum retention
-- **Cognitive Load Optimization**: Balances difficult and easy subjects throughout the day
-- **Adaptive Learning Analysis**: Learns from your study patterns and adjusts recommendations
-- **Performance Prediction Models**: Forecasts study outcomes and success probability
+### Prerequisites
+- Node.js 18+ and npm
+- Git
 
-### Smart Schedule Generation
-- **Multi-factor Optimization**: Considers deadlines, difficulty, cognitive load, and personal productivity patterns
-- **Deadline Pressure Weighting**: Automatically prioritizes urgent subjects
-- **Peak Hour Alignment**: Schedules challenging topics during your most productive times
-- **Dynamic Replanning**: Adjusts schedule based on actual progress and performance
+### Installation
 
-### Advanced Analytics Dashboard
-- **Learning Velocity Tracking**: Monitors your study speed and effectiveness over time
-- **Productivity Pattern Analysis**: Identifies your optimal study times and patterns
-- **Retention Curve Visualization**: Shows memory decay and reinforcement patterns
-- **Risk Assessment**: Predicts potential study bottlenecks and burnout risks
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd AIStudyBuddy
+   ```
 
-### AI Interview Coach
-- **Adaptive Difficulty Progression**: Adjusts question difficulty based on your performance
-- **Industry-Specific Questions**: Technical, behavioral, and coding challenges
-- **Answer Quality Analysis**: Provides intelligent feedback on response completeness
-- **Mock Interview Simulation**: Realistic timed interview experiences
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### Personalized Study Techniques
-- **Technique Effectiveness Analysis**: Tracks which methods work best for you
-- **Subject-Specific Recommendations**: Suggests optimal techniques per subject type
-- **Learning Style Adaptation**: Adjusts to visual, auditory, or kinesthetic preferences
-- **Progress-Based Adjustments**: Modifies difficulty and techniques based on mastery
+3. **Set up environment variables**
+   ```bash
+   # Create .env.local file
+   echo "DEEPSEEK_API_KEY=sk-f112d2aa4cb348c7872e2af02b17989a" > .env.local
+   ```
 
-## Sophisticated Algorithms
+4. **Initialize database**
+   ```bash
+   npm run db:generate
+   npm run db:migrate
+   npm run db:seed
+   ```
 
-### 1. Spaced Repetition Engine
-```typescript
-// SM-2 Algorithm Implementation
-function calculateNextReview(quality: number, easeFactor: number, interval: number) {
-  // Optimizes review intervals based on memory retention science
-  const newEaseFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-  // Implements forgetting curve mathematics for optimal retention
-}
-```
+5. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-### 2. Schedule Optimization
-```typescript
-// Multi-objective optimization considering:
-// - Deadline urgency (exponential weighting)
-// - Cognitive load balancing
-// - User productivity patterns
-// - Subject dependencies and prerequisites
-function generateOptimalSchedule(subjects, constraints, productivityPattern) {
-  // Advanced scheduling algorithm with multiple optimization factors
-}
-```
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-### 3. Adaptive Learning Analysis
-```typescript
-// Machine learning approach to analyze user patterns
-class AdaptiveLearningAnalyzer {
-  static analyzeProductivityPattern(sessions) {
-    // Analyzes hourly and daily productivity patterns
-    // Calculates optimal session lengths and break intervals
-    // Identifies cognitive load patterns and focus decline rates
-  }
-}
-```
+## 📋 Available Scripts
 
-### 4. Performance Prediction
-```typescript
-// Predicts study outcomes using multiple factors
-function predictSubjectCompletion(subjects, sessions, productivityPattern) {
-  // Calculates completion probability using velocity analysis
-  // Considers difficulty adjustments and time constraints
-  // Provides confidence intervals and risk assessments
-}
-```
+- `npm run dev` - Start development server with Turbopack
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run db:generate` - Generate Prisma client
+- `npm run db:migrate` - Run database migrations
+- `npm run db:push` - Push schema changes to database
+- `npm run db:seed` - Seed database with sample data
 
-## Local Development
+## 🛠️ Tech Stack
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/sanketmuchhala/AIStudyBuddy.git
-    cd AIStudyBuddy
-    ```
+### Core Framework
+- **Next.js 15** - React framework with App Router
+- **TypeScript** - Type safety and better DX
+- **Tailwind CSS 4** - Utility-first styling
+- **Framer Motion** - Smooth animations
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+### UI Components
+- **shadcn/ui** - High-quality component library
+- **Radix UI** - Accessible primitives
+- **Lucide React** - Beautiful icons
+- **React Hook Form** - Form handling with validation
 
-3.  **Set up environment variables:**
-    Create a `.env` file in the root of the project and add the following variables:
-    ```
-    GEMINI_API_KEY=your_gcp_api_key
-    ```
+### Backend & Database
+- **Prisma** - Type-safe database ORM
+- **SQLite** - Local database for development
+- **Zod** - Schema validation
+- **DeepSeek API** - AI chat completions
 
-4.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-    This will start both the frontend and backend servers concurrently. The frontend will be available at `http://localhost:5173`.
+### State Management
+- **Zustand** - Lightweight state management
+- **React Context** - Theme and global state
 
-## Environment Variables
+## 🗄️ Database Schema
 
--   `PORT`: The port for the server to listen on (default: `8080`).
--   `NODE_ENV`: The node environment (`development` or `production`).
--   `GEMINI_API_KEY` or `GOOGLE_API_KEY`: Your API key for Google Gemini.
--   `PROVIDER`: The AI provider to use (`gemini` or `mock`). The `mock` provider is useful for local development without an API key.
+The app uses SQLite with Prisma ORM. Key entities:
 
-## Railway Deployment
+- **User** - User profiles and settings
+- **ChatSession & ChatMessage** - Chat history storage
+- **Flashcard** - Spaced repetition cards with SM-2 data
+- **InterviewSession & InterviewQuestion** - Interview prep data
+- **StudySession & StudyStreak** - Study tracking and gamification
 
-This project is configured for deployment on Railway. The `railway.json` file in the root of the project defines the build and deploy commands.
+## 🚀 Deployment
 
-To deploy your own instance, you can use the "Deploy to Railway" button or connect your forked repository to a new Railway project.
+### Deploy to Vercel
 
-You will need to configure the `GEMINI_API_KEY` or `GOOGLE_API_KEY` environment variable in the Railway project settings.
+1. **Install Vercel CLI**
+   ```bash
+   npm i -g vercel
+   ```
 
-## Troubleshooting
+2. **Deploy**
+   ```bash
+   vercel
+   ```
 
--   **Build Failures:** Clear `node_modules` and reinstall dependencies.
--   **API Errors:** Check your environment variables and API keys.
+3. **Set environment variables**
+   - Go to your Vercel dashboard
+   - Add `DEEPSEEK_API_KEY` to environment variables
+   - Redeploy
 
-## Architecture
+### Environment Variables
+- `DEEPSEEK_API_KEY` - Your DeepSeek API key for AI features
 
-### Frontend Stack
-- **React 18** with TypeScript for type safety
-- **Vite** for fast development and optimized builds
-- **TailwindCSS** for responsive, modern UI
-- **Date-fns** for intelligent date manipulation
-- **Lucide React** for consistent iconography
+## ⌨️ Keyboard Shortcuts
 
-### Smart Algorithms
-```
-src/algorithms/
-├── spacedRepetition.ts      # SM-2 algorithm implementation
-├── scheduleOptimizer.ts     # Multi-factor scheduling engine
-├── patternAnalyzer.ts       # Adaptive learning analysis
-├── recommendationEngine.ts  # Smart study recommendations
-├── performancePredictor.ts  # Outcome prediction models
-└── interviewCoach.ts        # AI interview coaching system
-```
+### Global
+- `Alt + 1-6` - Quick navigation between pages
+- `Cmd/Ctrl + K` - Command palette (coming soon)
 
-### Component Architecture
-```
-src/components/
-├── Dashboard/              # Main dashboard with AI insights
-├── SmartScheduler/         # Intelligent schedule generation
-├── StudyTimer/            # Pomodoro timer with tracking
-├── InterviewCoach/        # AI-powered interview practice
-├── Analytics/             # Learning analytics dashboard
-└── Settings/              # Personalization and preferences
-```
+### Chat
+- `Cmd/Ctrl + Enter` - Send message
 
-## AI Capabilities
+### Flashcards
+- `Space` - Flip card
+- `1` - Rate as "Again" 
+- `2` - Rate as "Hard"
+- `3` - Rate as "Good"
+- `4` - Rate as "Easy"
 
-### Learning Science Implementation
-- **Ebbinghaus Forgetting Curve**: Mathematical model for memory retention
-- **Cognitive Load Theory**: Balances mental effort across study sessions
-- **Spaced Repetition**: Optimizes review timing for long-term retention
-- **Interleaving**: Mixes subject types for improved discrimination
+### Study Timer  
+- `Space` - Start/pause timer
+- `Escape` - Stop timer
+- `R` - Reset timer
 
-### Machine Learning Features
-- **Pattern Recognition**: Identifies personal productivity patterns
-- **Predictive Modeling**: Forecasts study outcomes and success rates
-- **Adaptive Algorithms**: Adjusts difficulty and recommendations based on performance
-- **Risk Assessment**: Predicts and prevents study burnout and bottlenecks
+## 🔧 Configuration
 
-### Personalization Engine
-- **Learning Style Detection**: Adapts to individual preferences
-- **Performance Analysis**: Tracks effectiveness across different techniques
-- **Motivation Modeling**: Adjusts recommendations based on progress momentum
-- **Goal Achievement Prediction**: Calculates probability of meeting deadlines
+### Pomodoro Settings
+- Default focus time: 25 minutes
+- Short break: 5 minutes  
+- Long break: 15 minutes
+- Customizable in Settings page
 
-## Customization
+### Spaced Repetition
+- Algorithm: SM-2 (SuperMemo 2)
+- Quality scale: 0-5
+- Minimum ease factor: 1.3
+- Initial interval: 1 day
 
-### Algorithm Tuning
-The AI algorithms can be fine-tuned by modifying parameters in:
-- `spacedRepetition.ts` - Adjust retention models
-- `scheduleOptimizer.ts` - Modify optimization weights
-- `patternAnalyzer.ts` - Change pattern detection sensitivity
+## 🤝 Contributing
 
-### UI Themes
-Customize the appearance by modifying TailwindCSS variables in:
-- `tailwind.config.js` - Color schemes and design tokens
-- `index.css` - Custom animations and effects
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Performance
+## 📝 License
 
-### Optimizations
-- **Lazy Loading**: Components load on demand
-- **Memoization**: Expensive calculations cached
-- **Local Storage**: Efficient data persistence
-- **PWA Caching**: Offline functionality with service workers
+This project is open source and available under the [MIT License](LICENSE).
 
-### Metrics
-- **Bundle Size**: ~263KB gzipped (production)
-- **Load Time**: <2s on 3G connection
-- **Performance Score**: 95+ (Lighthouse)
-- **Accessibility**: WCAG 2.1 AA compliant
+## 🙏 Acknowledgments
 
-## Privacy & Security
-
-### Data Protection
-- **Local Storage Only**: No data sent to external servers
-- **Privacy by Design**: No tracking or analytics
-- **Offline Capable**: Works completely offline
-- **Export Functionality**: Full data portability
-
-## Testing & Quality
-
-### Code Quality
-- **TypeScript**: Full type safety and IntelliSense
-- **ESLint**: Code quality and consistency
-- **Prettier**: Automatic code formatting
-- **Modern React**: Hooks, context, and best practices
-
-## Deployment Status
-
-**Production Ready**
-- Built and tested
-- PWA enabled
-- Performance optimized
-- Mobile responsive
-- Offline capable
-
-## Usage Examples
-
-### Study Planning
-1. Add subjects with deadlines and difficulty ratings
-2. Set your productivity preferences and peak hours
-3. Generate AI-optimized study schedule
-4. Track progress with intelligent analytics
-
-### Interview Preparation
-1. Select question category (technical/behavioral/coding)
-2. Practice with adaptive difficulty progression
-3. Receive AI feedback on answer quality
-4. Track readiness score and improvement areas
-
-### Performance Analysis
-1. Review learning velocity and effectiveness trends
-2. Identify optimal study times and techniques
-3. Get personalized recommendations for improvement
-4. Monitor risk factors and burnout prevention
-
-## Contributing
-
-This is a sophisticated AI study planner that demonstrates real machine learning concepts applied to education. The algorithms are based on peer-reviewed research in cognitive science and learning theory.
-
-## License
-
-MIT License - feel free to use and modify for your educational projects.
+- [DeepSeek](https://deepseek.com/) for AI capabilities
+- [shadcn/ui](https://ui.shadcn.com/) for beautiful components
+- [Vercel](https://vercel.com/) for deployment platform
+- [Prisma](https://prisma.io/) for database management
+- [SM-2 Algorithm](https://en.wikipedia.org/wiki/SuperMemo#Description_of_SM-2_algorithm) for spaced repetition
 
 ---
 
-**Built for intelligent learning**
-
-*This application demonstrates production-ready AI algorithms applied to education, featuring real spaced repetition, cognitive load optimization, and adaptive learning systems.*
+Built with ❤️ for better learning experiences
