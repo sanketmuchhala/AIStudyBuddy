@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -17,7 +16,6 @@ import {
   Download,
   Trash2,
   Bell,
-  Volume2,
   Eye,
   Keyboard,
   Database,
@@ -67,7 +65,7 @@ export default function SettingsPage() {
       URL.revokeObjectURL(url)
 
       toast.success('Data exported successfully!')
-    } catch (error) {
+    } catch {
       toast.error('Failed to export data')
     }
   }
@@ -78,7 +76,7 @@ export default function SettingsPage() {
         // In a real app, you'd make API calls to clear data
         localStorage.clear()
         toast.success('All data cleared successfully!')
-      } catch (error) {
+      } catch {
         toast.error('Failed to clear data')
       }
     }
@@ -102,7 +100,7 @@ export default function SettingsPage() {
       } else {
         toast.error('API connection failed')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to test API connection')
     }
   }

@@ -12,11 +12,8 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
-  Upload, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle,
+  Upload,
+  FileText,
   Play,
   Pause,
   RotateCcw
@@ -215,7 +212,7 @@ export default function InterviewPage() {
               <CardHeader>
                 <CardTitle>Interview Details</CardTitle>
                 <CardDescription>
-                  Tell us about the position you're interviewing for
+                  Tell us about the position you&apos;re interviewing for
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -241,7 +238,7 @@ export default function InterviewPage() {
 
                 <div className="space-y-2">
                   <Label>Experience Level</Label>
-                  <Select value={experienceLevel} onValueChange={(value: string) => setExperienceLevel(value)}>
+                  <Select value={experienceLevel} onValueChange={(value: string) => setExperienceLevel(value as 'entry' | 'mid' | 'senior')}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -383,7 +380,7 @@ export default function InterviewPage() {
             <CardHeader>
               <CardTitle>Practice Session Complete!</CardTitle>
               <CardDescription>
-                Great job! Here's a summary of your practice session.
+                Great job! Here&apos;s a summary of your practice session.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

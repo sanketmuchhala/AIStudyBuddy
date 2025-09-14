@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,9 +19,6 @@ import {
   Clock,
   Coffee,
   BookOpen,
-  Target,
-  Calendar,
-  TrendingUp,
   Volume2,
   VolumeX
 } from 'lucide-react'
@@ -49,17 +46,45 @@ export default function StudyPage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const { addStudyTime, updateStreak } = useStudyStore()
 
-  const getInitialTime = (mode: TimerMode) => {
+  const getInitialTime = useCallback((mode: TimerMode) => {
     switch (mode) {
       case 'pomodoro': return customDuration * 60
       case 'shortBreak': return SHORT_BREAK
       case 'longBreak': return LONG_BREAK
     }
-  }
+  }, [customDuration])
+
+  const handleTimerComplete = useCallback(() => {
+    setTimerState('idle')
+
+    if (soundEnabled) {
+      // Play notification sound (you could use Web Audio API here)
+      // For now, just show a notification
+    }
+
+    if (timerMode === 'pomodoro') {
+      setCompletedPomodoros(prev => prev + 1)
+      addStudyTime(customDuration)
+      updateStreak()
+
+      toast.success('Pomodoro completed! Great work! 🍅', {
+        description: 'Time for a break!'
+      })
+
+      // Auto-switch to break
+      const nextMode = completedPomodoros > 0 && (completedPomodoros + 1) % 4 === 0
+        ? 'longBreak'
+        : 'shortBreak'
+      setTimerMode(nextMode)
+    } else {
+      toast.success('Break time over! Ready to focus again? 💪')
+      setTimerMode('pomodoro')
+    }
+  }, [soundEnabled, timerMode, completedPomodoros, addStudyTime, customDuration, updateStreak])
 
   useEffect(() => {
     setTimeLeft(getInitialTime(timerMode))
-  }, [timerMode, customDuration])
+  }, [timerMode, getInitialTime])
 
   useEffect(() => {
     if (timerState === 'running' && timeLeft > 0) {
@@ -84,35 +109,7 @@ export default function StudyPage() {
         clearInterval(intervalRef.current)
       }
     }
-  }, [timerState, timeLeft])
-
-  const handleTimerComplete = () => {
-    setTimerState('idle')
-    
-    if (soundEnabled) {
-      // Play notification sound (you could use Web Audio API here)
-      // For now, just show a notification
-    }
-
-    if (timerMode === 'pomodoro') {
-      setCompletedPomodoros(prev => prev + 1)
-      addStudyTime(customDuration)
-      updateStreak()
-      
-      toast.success('Pomodoro completed! Great work! 🍅', {
-        description: 'Time for a break!'
-      })
-
-      // Auto-switch to break
-      const nextMode = completedPomodoros > 0 && (completedPomodoros + 1) % 4 === 0 
-        ? 'longBreak' 
-        : 'shortBreak'
-      setTimerMode(nextMode)
-    } else {
-      toast.success('Break time over! Ready to focus again? 💪')
-      setTimerMode('pomodoro')
-    }
-  }
+  }, [timerState, timeLeft, handleTimerComplete])
 
   const startTimer = () => {
     setTimerState('running')
@@ -366,7 +363,7 @@ export default function StudyPage() {
         <TabsContent value="plan" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Today's Study Plan</CardTitle>
+              <CardTitle>Today&apos;s Study Plan</CardTitle>
               <CardDescription>
                 Your planned study sessions for today
               </CardDescription>
@@ -408,7 +405,7 @@ export default function StudyPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Today's Sessions</CardTitle>
+                <CardTitle className="text-sm">Today&apos;s Sessions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{completedPomodoros}</div>
@@ -455,7 +452,7 @@ export default function StudyPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                   <div key={day} className="flex items-center space-x-4">
                     <div className="w-12 text-sm font-medium">{day}</div>
                     <Progress value={Math.random() * 100} className="flex-1" />

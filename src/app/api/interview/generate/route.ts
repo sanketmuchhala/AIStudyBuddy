@@ -84,11 +84,11 @@ Return the response as a JSON array with this structure:
       questions.slice(0, questionCount).map(async (q, index) => {
         const question = await prisma.interviewQuestion.create({
           data: {
-            question: q.question || `Sample question ${index + 1}`,
-            type: q.type || 'technical',
-            difficulty: q.difficulty || 'medium',
-            suggestedAnswer: q.suggestedAnswer || '',
-            starFramework: typeof q.starFramework === 'object' ? JSON.stringify(q.starFramework) : q.starFramework || null,
+            question: (typeof q.question === 'string' ? q.question : null) || `Sample question ${index + 1}`,
+            type: (typeof q.type === 'string' ? q.type : null) || 'technical',
+            difficulty: (typeof q.difficulty === 'string' ? q.difficulty : null) || 'medium',
+            suggestedAnswer: (typeof q.suggestedAnswer === 'string' ? q.suggestedAnswer : null) || '',
+            starFramework: typeof q.starFramework === 'object' ? JSON.stringify(q.starFramework) : (typeof q.starFramework === 'string' ? q.starFramework : null),
             interviewSessionId: session.id
           }
         })

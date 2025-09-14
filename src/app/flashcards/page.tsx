@@ -467,7 +467,7 @@ export default function FlashcardsPage() {
                 <CardDescription className="mb-6">
                   Create your first flashcard to start learning with spaced repetition
                 </CardDescription>
-                <Button onClick={() => document.querySelector('[value="create"]')?.click()}>
+                <Button onClick={() => (document.querySelector('[value="create"]') as HTMLElement)?.click()}>
                   Create Your First Card
                 </Button>
               </CardContent>

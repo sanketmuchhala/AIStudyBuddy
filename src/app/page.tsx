@@ -4,27 +4,22 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { 
-  MessageCircle, 
-  Users, 
-  BookOpen, 
-  CreditCard, 
-  Clock, 
-  Target,
+import {
+  MessageCircle,
+  Users,
+  BookOpen,
+  CreditCard,
+  Clock,
   TrendingUp,
-  Calendar,
   Trophy
 } from 'lucide-react'
-import { useStudyStore } from '@/lib/store'
 
 export default function Dashboard() {
   const [streakData, setStreakData] = useState({ current: 0, longest: 0 })
   const [studyStats, setStudyStats] = useState({ today: 0, week: 0, total: 0 })
   const [upcomingReviews, setUpcomingReviews] = useState(0)
-  const { totalStudyTime } = useStudyStore()
 
   useEffect(() => {
     // Mock data for now - would fetch from API in production
@@ -68,7 +63,7 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's your study overview.</p>
+        <p className="text-muted-foreground">Welcome back! Here&apos;s your study overview.</p>
       </div>
 
       {/* Stats Grid */}
@@ -88,7 +83,7 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Study Time</CardTitle>
+            <CardTitle className="text-sm font-medium">Today&apos;s Study Time</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
